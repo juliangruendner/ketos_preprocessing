@@ -1,4 +1,4 @@
-# Project Title
+# Data Preprocessing Service
 
 This repo contains a WebService and a MongoDB for retrieving patient cohorts
 
