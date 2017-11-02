@@ -1,0 +1,23 @@
+version: "3"
+services:
+  mongodb:
+    build:
+      context: .
+      dockerfile: Dockerfile.mongo
+    container_name: mongodb
+    restart: unless-stopped
+    expose:
+      - "27017" # process
+      - "28017" # http
+    ports:
+      - "127.0.0.1:27017:27017"
+      - "127.0.0.1:28017:28017"
+  # webservice:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.webservice
+  #   container_name: webservice
+  #   restart: unless-stopped
+  #   expose: ...
+  #   ports: ...
+  #   links: mongodb
