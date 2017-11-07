@@ -48,3 +48,24 @@ for entry in allEntries:
       new=True,
       upsert=True
     )
+
+    result = db.patients.aggregate([
+        {"$unwind": "$observations"},
+        {"$group" : {"_id" : {"attribute": "$observations.attribute", "patient_id": patient}, "entry": {"$push": "$$CURRENT.observations"}}},
+        {"$unwind": "$entry"},
+        {"$sort"  : {"entry.value": -1}},
+        {"$group" : {"_id": "$_id", "observations": {"$push": "$entry"}}},
+    ])
+
+    # db.patients.update_one(
+    #     {"_id": patient},
+    #     {"$unset": {"observations": ""}},
+    # )
+
+    # for entry in result:
+    #     print(entry)
+    #     print("---------------------------------")
+    #     db.patients.update_one(
+    #         {"_id": patient},
+    #         {"$push": {"observations": entry}}
+    #     )
