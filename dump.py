@@ -57,6 +57,26 @@ for entry in allEntries:
         {"$group" : {"_id": "$_id", "observations": {"$push": "$entry"}}},
     ])
 
+
+# ALL
+# [
+#     { $unwind: "$observations"},
+#     { $group : {_id : {attribute: "$observations.attribute", patient_id: "$_id"}, entry: { $push: "$$CURRENT.observations"}}},
+#     { $unwind: "$entry"},
+#     { $sort  : {"entry.timestamp": -1}},
+#     { $group : {_id: "$_id", observations: {$push: "$entry"}}}, # use first, last instead of push for other semantic
+#     { $group : {_id: "$_id.patient_id", observations: { $push: "$$CURRENT.observations"}}}
+# ]
+# AVG
+# [
+#     { $unwind: "$observations"},
+#     { $group : {_id : {attribute: "$observations.attribute", patient_id: "$_id"}, entry: { $push: "$$CURRENT.observations"}}},
+#     { $unwind: "$entry"},
+#     { $sort  : {"entry.timestamp": -1}},
+#     { $group : {_id: "$_id" , attribute: { $first: "$_id.attribute" }, observations: { $avg: "$entry.value"}}},
+#     { $group : {_id: "$_id.patient_id", observations: { $push: {avg: "$$CURRENT.observations", attribute: "$_id.attribute"}}}}
+# ]
+
     # db.patients.update_one(
     #     {"_id": patient},
     #     {"$unset": {"observations": ""}},
