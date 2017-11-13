@@ -19,7 +19,7 @@ class Reducer:
         return None
 
     def getReduced(self):
-        return self.__map;
+        return self.__map
 
     def asJsonString(self):
         return json.dumps(self.__map)
