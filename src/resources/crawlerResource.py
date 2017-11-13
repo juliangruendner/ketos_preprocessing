@@ -14,33 +14,32 @@ class Crawler(Resource):
         return self.post(patient_id)
 
     def post(self, patient_id):
-        nextPage = configuration.HAPIFHIR_URL+'Observation?_pretty=true&subject='+patient_id+'&_format=json&_count=100'
-        allEntries = []
-        print("XXX"+nextPage)
-        while nextPage != None:
-            r = requests.get(nextPage)
-            json = r.json()
+        next_page = configuration.HAPIFHIR_URL+'Observation?_pretty=true&subject='+patient_id+'&_format=json&_count=100'
+        all_entries = []
+        
+        while next_page != None:
+            request = requests.get(next_page)
+            json = request.json()
             entries = json["entry"]
 
             if len(json["link"]) > 1 and json["link"][1]["relation"] == "next" :
-                nextPage = json["link"][1]["url"]
+                next_page = json["link"][1]["url"]
             else:
-                nextPage = None
+                next_page = None
 
-            print(nextPage)
+            all_entries += entries
 
-            allEntries += entries
-            break
-
-        for entry in allEntries:
+        observations = []
+        for entry in all_entries:
             reducer = ObservationReducer(entry["resource"])
             reduced = reducer.getReduced()
-            patient = reducer.getEntity()
+            #patient = reducer.getEntity()
+            observations.append(reduced)
 
-            configuration.MONGODB.patients.find_one_and_update(
-            { "_id": patient },
-            {"$push" : { "observations" : reduced}},
+        configuration.MONGODB.patients.find_one_and_replace(
+            { "_id": patient_id },
+            { "observations" : observations},
             new=True,
             upsert=True
-            )
+        )
 
