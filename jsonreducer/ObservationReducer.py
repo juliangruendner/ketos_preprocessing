@@ -1,6 +1,6 @@
-from EAVReducer import EAVReducer
-from ValueQuantityReducer import ValueQuantityReducer
-from CodingReducer import CodingReducer
+from .EAVReducer import EAVReducer
+from .ValueQuantityReducer import ValueQuantityReducer
+from .CodingReducer import CodingReducer
 
 class ObservationReducer(EAVReducer):
 
@@ -13,7 +13,7 @@ class ObservationReducer(EAVReducer):
 
         codeReducer = CodingReducer(json["code"]["coding"][0])
         self.setAttribute(codeReducer.getCode()) #["resource"]
-        self.updateMeta("attribute", json["code"]["text"])
+        self.updateMeta("attribute", codeReducer.getDisplay())
 
         self.setTimestamp(json["effectiveDateTime"])
 

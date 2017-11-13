@@ -18,8 +18,9 @@ collection = db[MONGOCOLLECTION]
 allEntries = []
 
 #pid = "test-1796238"
-pid = "Patient/140570"
-nextPage = 'http://fhirtest.uhn.ca/baseDstu3/Observation?_pretty=true&subject='+pid+'&_format=json&_count=100'
+#pid = "Patient/140570"
+pid = "185"
+nextPage = 'http://gruendner.de:8080/gtfhir/base/Observation?_pretty=true&subject='+pid+'&_format=json&_count=100'
 
 
 while nextPage != None:

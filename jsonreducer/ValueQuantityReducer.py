@@ -1,4 +1,4 @@
-from ValueReducer import ValueReducer
+from .ValueReducer import ValueReducer
 
 class ValueQuantityReducer(ValueReducer):
 

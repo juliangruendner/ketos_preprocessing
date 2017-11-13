@@ -1,4 +1,4 @@
-from Reducer import Reducer
+from .Reducer import Reducer
 
 class CodingReducer(Reducer):
 

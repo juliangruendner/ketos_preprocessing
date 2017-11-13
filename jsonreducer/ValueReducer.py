@@ -1,5 +1,5 @@
 import json
-from Reducer import Reducer
+from .Reducer import Reducer
 
 class ValueReducer(Reducer):
 
