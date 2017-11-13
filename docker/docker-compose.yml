@@ -12,12 +12,12 @@ services:
     ports:
       - "127.0.0.1:27017:27017"
       - "127.0.0.1:28017:28017"
-  # webservice:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile.webservice
-  #   container_name: webservice
-  #   restart: unless-stopped
-  #   expose: ...
-  #   ports: ...
-  #   links: mongodb
+  dataws:
+    build:
+      context: .
+      dockerfile: Dockerfile.dataws
+    ports:
+      - "5000:5000"
+    restart: unless-stopped
+    links: 
+      - mongodb
