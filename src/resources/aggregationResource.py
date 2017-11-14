@@ -27,14 +27,9 @@ class Aggregation(Resource):
                 {"$group" : {"_id": "$_id", "observations": {"$push": "$entry"}}},
                 {"$group" : {"_id": "$_id.patient_id", "observations": { "$push": "$$CURRENT.observations"}}}
             ]
-        elif aggtype.lower() == "first":
+        elif aggtype.lower() == "first" or aggtype.lower() == "last":
             mongorequest += [
-                {"$group" : {"_id": "$_id", "observations": {"$first": "$entry"}}},
-                {"$group" : {"_id": "$_id.patient_id", "observations": { "$push": "$$CURRENT.observations"}}}
-            ]
-        elif aggtype.lower() == "last":
-             mongorequest += [
-                {"$group" : {"_id": "$_id", "observations": {"$first": "$entry"}}},
+                {"$group" : {"_id": "$_id", "observations": {"$"+aggtype.lower(): "$entry"}}},
                 {"$group" : {"_id": "$_id.patient_id", "observations": { "$push": "$$CURRENT.observations"}}}
             ]
         elif aggtype.lower() == "avg":
@@ -42,6 +37,8 @@ class Aggregation(Resource):
                 {"$group" : {"_id": "$_id" , "attribute": { "$first": "$_id.attribute" }, "observations": { "$avg": "$entry.value"}}},
                 {"$group" : {"_id": "$_id.patient_id", "observations": { "$push": {"avg": "$$CURRENT.observations", "attribute": "$_id.attribute"}}}}
             ]
+        else:
+            return None
 
         result = mongodbConnection.get_db().patients.aggregate(mongorequest)
         return list(result)
