@@ -1,5 +1,6 @@
 from flask_restful import Resource, Api, reqparse, abort
 from jsonreducer.ObservationReducer import ObservationReducer
+from lib import mongodbConnection
 import requests
 import configuration
 
@@ -36,7 +37,7 @@ class Crawler(Resource):
             #patient = reducer.getEntity()
             observations.append(reduced)
 
-        configuration.MONGODB.patients.find_one_and_replace(
+        mongodbConnection.get_db().patients.find_one_and_replace(
             { "_id": patient_id },
             { "observations" : observations},
             new=True,

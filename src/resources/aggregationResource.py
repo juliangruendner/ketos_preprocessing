@@ -1,5 +1,6 @@
 from flask_restful import Resource, Api, reqparse, abort
 from jsonreducer.ObservationReducer import ObservationReducer
+from lib import mongodbConnection
 import requests
 import configuration
 
@@ -11,7 +12,7 @@ class Aggregation(Resource):
         super(Aggregation, self).__init__()
 
     def get(self):
-        result = configuration.MONGODB.patients.aggregate([
+        result = mongodbConnection.get_db().patients.aggregate([
             {"$unwind": "$observations"},
             {"$group" : {"_id" : {"attribute": "$observations.attribute", "patient_id": "$_id"}, "entry": {"$push": "$$CURRENT.observations"}}},
             {"$unwind": "$entry"},
