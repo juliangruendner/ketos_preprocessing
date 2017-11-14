@@ -8,18 +8,42 @@ import configuration
 class Aggregation(Resource):
     def __init__(self):
         self.parser = reqparse.RequestParser()
-        self.parser.add_argument('data', type = str, required = True, help = 'No data provided', location = 'json')
+        self.parser.add_argument('AggType', type = str, help = 'No aggregation type provided', location = 'args')
         super(Aggregation, self).__init__()
 
     def get(self):
-        result = mongodbConnection.get_db().patients.aggregate([
+        args = self.parser.parse_args()
+        aggtype = args["AggType"]
+
+        mongorequest = [
             {"$unwind": "$observations"},
             {"$group" : {"_id" : {"attribute": "$observations.attribute", "patient_id": "$_id"}, "entry": {"$push": "$$CURRENT.observations"}}},
             {"$unwind": "$entry"},
-            {"$sort"  : {"entry.timestamp": -1}},
-            {"$group" : {"_id": "$_id", "observations": {"$push": "$entry"}}},
-            { "$group" : {"_id": "$_id.patient_id", "observations": { "$push": "$$CURRENT.observations"}}}
-        ])
+            {"$sort"  : {"entry.timestamp": -1}}
+        ]
+
+        if aggtype == None or aggtype.lower() == "all":
+            mongorequest += [
+                {"$group" : {"_id": "$_id", "observations": {"$push": "$entry"}}},
+                {"$group" : {"_id": "$_id.patient_id", "observations": { "$push": "$$CURRENT.observations"}}}
+            ]
+        elif aggtype.lower() == "first":
+            mongorequest += [
+                {"$group" : {"_id": "$_id", "observations": {"$first": "$entry"}}},
+                {"$group" : {"_id": "$_id.patient_id", "observations": { "$push": "$$CURRENT.observations"}}}
+            ]
+        elif aggtype.lower() == "last":
+             mongorequest += [
+                {"$group" : {"_id": "$_id", "observations": {"$first": "$entry"}}},
+                {"$group" : {"_id": "$_id.patient_id", "observations": { "$push": "$$CURRENT.observations"}}}
+            ]
+        elif aggtype.lower() == "avg":
+            mongorequest += [
+                {"$group" : {"_id": "$_id" , "attribute": { "$first": "$_id.attribute" }, "observations": { "$avg": "$entry.value"}}},
+                {"$group" : {"_id": "$_id.patient_id", "observations": { "$push": {"avg": "$$CURRENT.observations", "attribute": "$_id.attribute"}}}}
+            ]
+
+        result = mongodbConnection.get_db().patients.aggregate(mongorequest)
         return list(result)
 
     def post(self):
