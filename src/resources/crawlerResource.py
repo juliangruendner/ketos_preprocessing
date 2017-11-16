@@ -1,46 +1,51 @@
 from flask_restful import Resource, Api, reqparse, abort
 from jsonreducer.ObservationReducer import ObservationReducer
-from lib import mongodbConnection
-import requests
 import configuration
+from flask import request
+from lib import mongodbConnection
+from bson.objectid import ObjectId
+from bson import json_util
+import json
+from datetime import datetime
+import gevent
+import gevent.monkey
+gevent.monkey.patch_all()
 
 
-class Crawler(Resource):
+class CrawlerJob(Resource):
     def __init__(self):
         self.parser = reqparse.RequestParser()
-        self.parser.add_argument('data', type = str, required = True, help = 'No data provided', location = 'json')
-        super(Crawler, self).__init__()
+        self.parser.add_argument('resource', type = str, required = True, help = 'No resource provided', location = 'json')
+        self.parser.add_argument('patients', type = str, action = 'append', required = True, help = 'No patients provided', location = 'json')
+        super(CrawlerJob, self).__init__()
 
-    def get(self, patient_id):
-        return self.post(patient_id)
+    def get(self, crawler_id):
+        return mongodbConnection.get_db().crawlerJobs.find_one({"_id": crawler_id})
 
-    def post(self, patient_id):
-        next_page = configuration.HAPIFHIR_URL+'Observation?_pretty=true&subject='+patient_id+'&_format=json&_count=100'
-        all_entries = []
-        
-        while next_page != None:
-            request = requests.get(next_page)
-            json = request.json()
-            entries = json["entry"]
 
-            if len(json["link"]) > 1 and json["link"][1]["relation"] == "next" :
-                next_page = json["link"][1]["url"]
-            else:
-                next_page = None
+class CrawlerJobs(Resource):
+    def __init__(self):
+        self.parser = reqparse.RequestParser()
+        self.parser.add_argument('resource', type = str, required = True, help = 'No resource provided', location = 'json')
+        self.parser.add_argument('patients', type = str, action = 'append', required = True, help = 'No patients provided', location = 'json')
+        super(CrawlerJobs, self).__init__()
 
-            all_entries += entries
+    def get(self):
+        return list(mongodbConnection.get_db().crawlerJobs.find())
 
-        observations = []
-        for entry in all_entries:
-            reducer = ObservationReducer(entry["resource"])
-            reduced = reducer.getReduced()
-            #patient = reducer.getEntity()
-            observations.append(reduced)
 
-        mongodbConnection.get_db().patients.find_one_and_replace(
-            { "_id": patient_id },
-            { "observations" : observations},
-            new=True,
-            upsert=True
-        )
+    def post(self):
+        args = self.parser.parse_args()
+        resource = args["resource"]
+        patients = args["patients"]
 
+        ret = mongodbConnection.get_db().crawlerJobs.insert_one({
+            "_id": str(ObjectId()),
+            "resource": args["resource"],
+            "patients": args["patients"],
+            "status": "queued",
+            "finished": [],
+            "start_time": str(datetime.now())
+        })
+
+        return {"id": str(ret.inserted_id)}
