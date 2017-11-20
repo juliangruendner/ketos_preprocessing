@@ -1,6 +1,8 @@
 import threading
 import time
 from lib import mongodbConnection
+from lib import crawler
+from datetime import datetime
 
 class CrawlerTask(object):
 
@@ -14,8 +16,17 @@ class CrawlerTask(object):
     def run(self):
         with self.app.app_context():
             while True:
-                #next_job = mongodbConnection.get_db().crawlerJobs.find_one({"status": "queued"})
-                print("peter")
-                #mongodbConnection.get_db().crawlerJobs.update(next_job, {"status": "running"})
+                next_job = mongodbConnection.get_db().crawlerJobs.find_one({"status": "queued"})
+                
+                if(next_job is None):
+                    continue
+
+                mongodbConnection.get_db().crawlerJobs.update({"_id": next_job["_id"]}, {"$set": {"status": "running", "start_time": str(datetime.now())}})
+
+                for subject in next_job["patients"]:
+                    crawler.crawlResourceForSubject(next_job["resource"], subject, next_job["_id"])
+                    mongodbConnection.get_db().crawlerJobs.update({"_id": next_job["_id"]}, {"$push": {"finished": subject}})
+
+                mongodbConnection.get_db().crawlerJobs.update({"_id": next_job["_id"]}, {"$set": {"status": "finished", "end_time": str(datetime.now())}})
 
                 time.sleep(self.interval)

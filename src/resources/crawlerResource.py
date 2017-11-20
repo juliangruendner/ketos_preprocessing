@@ -6,7 +6,6 @@ from lib import mongodbConnection
 from bson.objectid import ObjectId
 from bson import json_util
 import json
-from datetime import datetime
 import gevent
 import gevent.monkey
 gevent.monkey.patch_all()
@@ -45,7 +44,7 @@ class CrawlerJobs(Resource):
             "patients": args["patients"],
             "status": "queued",
             "finished": [],
-            "start_time": str(datetime.now())
+            "start_time": None
         })
 
         return {"id": str(ret.inserted_id)}

@@ -1,4 +1,4 @@
-import mongodbConnection
+from lib import mongodbConnection
 from jsonreducer.ObservationReducer import ObservationReducer
 import configuration
 import requests
