@@ -26,7 +26,6 @@ class Aggregation(Resource):
         else:
             return aggregator.aggregate(crawler_id, aggregation_type)
 
-
     def post(self):
         return None
 

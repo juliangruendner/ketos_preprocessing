@@ -29,7 +29,6 @@ class CrawlerJobs(Resource):
     def get(self):
         return list(mongodbConnection.get_db().crawlerJobs.find())
 
-
     def post(self):
         args = self.parser.parse_args()
         resource = args["resource"]

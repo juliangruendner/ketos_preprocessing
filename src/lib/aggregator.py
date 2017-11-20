@@ -18,14 +18,8 @@ def aggregate(crawler_id, aggtype):
             {"$group" : {"_id": "$_id", "observations": {"$push": "$entry"}}},
             {"$group" : {"_id": "$_id.patient_id", "observations": { "$push": "$$CURRENT.observations"}}}
         ]
-    elif aggtype.lower() == "latest" or aggtype.lower() == "oldest":
-        tmp = ""
-        
-        if aggtype.lower() == "oldest":
-            tmp = "first"
-        else :
-            tmp = "last"
-
+    elif aggtype.lower() == "latest" or aggtype.lower() == "oldest":        
+        tmp = "first" if aggtype.lower() == "oldest" else "last"
         mongorequest += [
             {"$group" : {"_id": "$_id", "observations": {"$"+tmp: "$entry"}}},
             {"$group" : {"_id": "$_id.patient_id", "observations": { "$push": "$$CURRENT.observations"}}}
