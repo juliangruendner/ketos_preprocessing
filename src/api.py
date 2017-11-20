@@ -11,7 +11,7 @@ api = Api(app)
 
 api.add_resource(crawlerResource.CrawlerJob, '/crawler/job/<crawler_id>', endpoint='job')
 api.add_resource(crawlerResource.CrawlerJobs, '/crawler/jobs', endpoint='jobs')
-api.add_resource(aggregationResource.Aggregation, '/aggregation', endpoint='aggregation')      
+api.add_resource(aggregationResource.Aggregation, '/aggregation/<crawler_id>', endpoint='aggregation')      
 
 
 if(os.environ.get("WERKZEUG_RUN_MAIN") == "true"):

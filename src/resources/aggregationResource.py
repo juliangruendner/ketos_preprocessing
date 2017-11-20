@@ -11,7 +11,7 @@ class Aggregation(Resource):
         self.parser.add_argument('AggType', type = str, help = 'No aggregation type provided', location = 'args')
         super(Aggregation, self).__init__()
 
-    def get(self):
+    def get(self, crawler_id):
         args = self.parser.parse_args()
         aggtype = args["AggType"]
 
@@ -40,7 +40,7 @@ class Aggregation(Resource):
         else:
             return None
 
-        result = mongodbConnection.get_db().patients.aggregate(mongorequest)
+        result = mongodbConnection.get_db()[crawler_id].aggregate(mongorequest)
         return list(result)
 
     def post(self):
