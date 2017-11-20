@@ -61,15 +61,26 @@ def aggregateCSV(crawler_id, aggtype, features):
         for feature in features:
             fieldnames.append(all_features[feature])
 
-    writer = csv.DictWriter(output, fieldnames=fieldnames)
-    writer.writeheader()
-
+    lines = []
     for patient in result:
         row = {}
         row["subject"] = patient["_id"]
         for observation in patient["observations"]:
             if observation["attribute"] in features or not features:
-                row[all_features[observation["attribute"]]] = observation["value"]
-        writer.writerow(row)
+                col_name = all_features[observation["attribute"]]
+                if isinstance(observation["value"], list):
+                    for idx, val in enumerate(observation["value"]):
+                        tmp_col = col_name+"."+str(idx)
+                        row[tmp_col] = val     
+                        fieldnames.append(tmp_col) 
+                else:
+                    row[col_name] = observation["value"]
+        lines.append(row)
+
+    writer = csv.DictWriter(output, fieldnames=set(fieldnames))
+    writer.writeheader()
+
+    for line in lines:
+        writer.writerow(line)
 
     return output.getvalue()
