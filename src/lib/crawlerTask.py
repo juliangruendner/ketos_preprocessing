@@ -8,12 +8,14 @@ class CrawlerTask(object):
         self.interval = interval
         self.app = app
         thread = threading.Thread(target=self.run, args=())
-        thread.daemon = False                            # Daemonize thread
-        thread.start()                                  # Start the execution
+        thread.daemon = False                            
+        thread.start()                                  
 
     def run(self):
         with self.app.app_context():
             while True:
-                next_job = mongodbConnection.get_db().crawlerJobs.find_one({"status": "queued"})
-                print(next_job)
+                #next_job = mongodbConnection.get_db().crawlerJobs.find_one({"status": "queued"})
+                print("peter")
+                #mongodbConnection.get_db().crawlerJobs.update(next_job, {"status": "running"})
+
                 time.sleep(self.interval)

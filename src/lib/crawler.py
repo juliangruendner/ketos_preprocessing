@@ -3,7 +3,7 @@ from jsonreducer.ObservationReducer import ObservationReducer
 import configuration
 import requests
 
-def crawlResourceForSubject(resource, subject):
+def crawlResourceForSubject(resource, subject, collection):
     next_page = configuration.HAPIFHIR_URL+resource+'?_pretty=true&subject='+subject+'&_format=json&_count=100'
     all_entries = []
     
@@ -27,13 +27,13 @@ def crawlResourceForSubject(resource, subject):
         observations.append(reduced)
 
 
-    mongodbConnection.get_db().patients.find_one_and_replace(
+    mongodbConnection.get_db()[collection].find_one_and_replace(
         { "_id": subject },
         { "observations" : observations},
         new=True,
         upsert=True
     )
 
-def crawlResource(resource, subjects):
+def crawlResource(resource, subjects, job_id):
     for subject in subjects:
-        crawlResourceForSubject(resource, subject)
+        crawlResourceForSubject(resource, subject, job_id)
