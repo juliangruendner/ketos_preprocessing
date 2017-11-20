@@ -3,52 +3,29 @@ from jsonreducer.ObservationReducer import ObservationReducer
 from lib import mongodbConnection
 import requests
 import configuration
+from lib import aggregator
+from flask import Response
 
 
 class Aggregation(Resource):
     def __init__(self):
         self.parser = reqparse.RequestParser()
-        self.parser.add_argument('AggType', type = str, help = 'No aggregation type provided', location = 'args')
+        self.parser.add_argument('aggregation_type', type = str, help = 'No aggregation type provided', location = 'args')
+        self.parser.add_argument('output_type', type = str, help = 'No aggregation type provided', location = 'args')
+
         super(Aggregation, self).__init__()
 
     def get(self, crawler_id):
         args = self.parser.parse_args()
-        aggtype = args["AggType"]
+        aggregation_type = args["aggregation_type"]
+        output_type = args["output_type"]
 
-        mongorequest = [
-            {"$unwind": "$observations"},
-            {"$group" : {"_id" : {"attribute": "$observations.attribute", "patient_id": "$_id"}, "entry": {"$push": "$$CURRENT.observations"}}},
-            {"$unwind": "$entry"},
-            {"$sort"  : {"entry.timestamp": 1}}
-        ]
-
-        if aggtype == None or aggtype.lower() == "all":
-            mongorequest += [
-                {"$group" : {"_id": "$_id", "observations": {"$push": "$entry"}}},
-                {"$group" : {"_id": "$_id.patient_id", "observations": { "$push": "$$CURRENT.observations"}}}
-            ]
-        elif aggtype.lower() == "latest" or aggtype.lower() == "oldest":
-            tmp = ""
-            
-            if aggtype.lower() == "oldest":
-                tmp = "first"
-            else :
-                tmp = "last"
-
-            mongorequest += [
-                {"$group" : {"_id": "$_id", "observations": {"$"+tmp: "$entry"}}},
-                {"$group" : {"_id": "$_id.patient_id", "observations": { "$push": "$$CURRENT.observations"}}}
-            ]
-        elif aggtype.lower() == "avg":
-            mongorequest += [
-                {"$group" : {"_id": "$_id" , "attribute": { "$first": "$_id.attribute" }, "observations": { "$avg": "$entry.value"}}},
-                {"$group" : {"_id": "$_id.patient_id", "observations": { "$push": {"avg": "$$CURRENT.observations", "attribute": "$_id.attribute"}}}}
-            ]
+        if output_type == "csv":
+            result = aggregator.aggregateCSV(crawler_id, aggregation_type, [])
+            return Response(result, mimetype='text/csv')
         else:
-            return None
+            return aggregator.aggregate(crawler_id, aggregation_type)
 
-        result = mongodbConnection.get_db()[crawler_id].aggregate(mongorequest)
-        return list(result)
 
     def post(self):
         return None
