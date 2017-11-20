@@ -19,6 +19,7 @@ class CrawlerTask(object):
                 next_job = mongodbConnection.get_db().crawlerJobs.find_one({"status": "queued"})
                 
                 if(next_job is None):
+                    time.sleep(self.interval)
                     continue
 
                 mongodbConnection.get_db().crawlerJobs.update({"_id": next_job["_id"]}, {"$set": {"status": "running", "start_time": str(datetime.now())}})
@@ -28,5 +29,3 @@ class CrawlerTask(object):
                     mongodbConnection.get_db().crawlerJobs.update({"_id": next_job["_id"]}, {"$push": {"finished": subject}})
 
                 mongodbConnection.get_db().crawlerJobs.update({"_id": next_job["_id"]}, {"$set": {"status": "finished", "end_time": str(datetime.now())}})
-
-                time.sleep(self.interval)
