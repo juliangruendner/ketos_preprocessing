@@ -13,7 +13,11 @@ class ObservationReducer(EAVReducer):
 
         codeReducer = CodingReducer(json["code"]["coding"][0])
         self.setAttribute(codeReducer.getCode()) #["resource"]
-        self.updateMeta("attribute", codeReducer.getDisplay())
+        
+        if codeReducer.getDisplay() is not None:
+            self.updateMeta("attribute", codeReducer.getDisplay())
+        elif "text" in json["code"]:
+            self.updateMeta("attribute", json["code"]["text"])    
 
         self.setTimestamp(json["effectiveDateTime"])
 

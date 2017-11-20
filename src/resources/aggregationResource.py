@@ -19,7 +19,7 @@ class Aggregation(Resource):
             {"$unwind": "$observations"},
             {"$group" : {"_id" : {"attribute": "$observations.attribute", "patient_id": "$_id"}, "entry": {"$push": "$$CURRENT.observations"}}},
             {"$unwind": "$entry"},
-            {"$sort"  : {"entry.timestamp": -1}}
+            {"$sort"  : {"entry.timestamp": 1}}
         ]
 
         if aggtype == None or aggtype.lower() == "all":
@@ -27,9 +27,16 @@ class Aggregation(Resource):
                 {"$group" : {"_id": "$_id", "observations": {"$push": "$entry"}}},
                 {"$group" : {"_id": "$_id.patient_id", "observations": { "$push": "$$CURRENT.observations"}}}
             ]
-        elif aggtype.lower() == "first" or aggtype.lower() == "last":
+        elif aggtype.lower() == "latest" or aggtype.lower() == "oldest":
+            tmp = ""
+            
+            if aggtype.lower() == "oldest":
+                tmp = "first"
+            else :
+                tmp = "last"
+
             mongorequest += [
-                {"$group" : {"_id": "$_id", "observations": {"$"+aggtype.lower(): "$entry"}}},
+                {"$group" : {"_id": "$_id", "observations": {"$"+tmp: "$entry"}}},
                 {"$group" : {"_id": "$_id.patient_id", "observations": { "$push": "$$CURRENT.observations"}}}
             ]
         elif aggtype.lower() == "avg":
