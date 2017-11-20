@@ -11,7 +11,7 @@ class Aggregation(Resource):
     def __init__(self):
         self.parser = reqparse.RequestParser()
         self.parser.add_argument('aggregation_type', type = str, help = 'No aggregation type provided', location = 'args')
-        self.parser.add_argument('output_type', type = str, help = 'No aggregation type provided', location = 'args')
+        self.parser.add_argument('output_type', type = str, help = 'No output type provided', location = 'args')
 
         super(Aggregation, self).__init__()
 
