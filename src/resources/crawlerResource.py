@@ -37,12 +37,6 @@ class CrawlerJob(Resource):
             "name": "crawler_parser",
             "parser": parser
         },
-        "parameters": [{
-            "name": "body",
-            "in": "body",
-            "required": True,
-            "description": "blabal"
-        }],
         "responses": {
             "200": {
                 "description": "Retrieved a json with the created Crawler ID."
