@@ -1,5 +1,4 @@
 from flask_restful import Resource, Api, reqparse, abort
-from flask_restful_swagger import swagger
 from jsonreducer.ObservationReducer import ObservationReducer
 import configuration
 from flask import request
