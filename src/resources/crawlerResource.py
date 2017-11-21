@@ -1,4 +1,5 @@
-from flask_restful import Resource, Api, reqparse, abort
+from flask_restful import Api, reqparse, abort
+from flask_restful_swagger_2 import swagger, Resource
 from jsonreducer.ObservationReducer import ObservationReducer
 import configuration
 from flask import request
@@ -8,17 +9,52 @@ from bson import json_util
 from datetime import datetime
 import json
 
+NO_RESOURCE_STR = "No resource provided"
+NO_PATIENTS_STR = "No patients provided"
 
-class CrawlerJobs(Resource):
+class CrawlerJob(Resource):
     def __init__(self):
         self.parser = reqparse.RequestParser()
-        self.parser.add_argument('resource', type = str, required = True, help = 'No resource provided', location = 'json')
-        self.parser.add_argument('patients', type = str, action = 'append', required = True, help = 'No patients provided', location = 'json')
-        super(CrawlerJobs, self).__init__()
+        self.parser.add_argument('resource', type = str, required = True, help = NO_RESOURCE_STR, location = 'json')
+        self.parser.add_argument('patients', type = str, action = 'append', required = True, help = NO_PATIENTS_STR, location = 'json')
+        super(CrawlerJob, self).__init__()
+    
+    @swagger.doc({
+        "description":'Get all Crawler Jobs.',
+        "responses": {
+            "200": {
+                "description": "Retrieved Crawler Job(s) as json."
+            }
+        }
+    })
+    def get(self):
+        return list(mongodbConnection.get_db().crawlerJobs.find())
 
-    def get(self, crawler_id=None):
-        return list(mongodbConnection.get_db().crawlerJobs.find()) if crawler_id is None else mongodbConnection.get_db().crawlerJobs.find_one({"_id": crawler_id})
-
+    @swagger.doc({
+        "description":'Start a Crawler Job.',
+        # "parameters": [
+        #     {
+        #         "name": "payload",
+        #         "description": "Contains fields 'resource' and 'patients'",
+        #         "required": True,
+        #         "paramType": "body",
+        #         'example': {
+        #             'application/json': {
+        #                 'id': 1,
+        #                 'name': 'somebody'
+        #             }
+        #         }
+        #     }
+        # ],
+        "responses": {
+            "200": {
+                "description": "Retrieved a json with the created Crawler ID."
+            },
+            "400": {
+                "description": NO_RESOURCE_STR + " or " + NO_PATIENTS_STR
+            }
+        }
+    })
     def post(self):
         args = self.parser.parse_args()
         resource = args["resource"]
@@ -35,3 +71,27 @@ class CrawlerJobs(Resource):
         })
 
         return {"id": str(ret.inserted_id)}
+
+class CrawlerJobs(Resource):
+    def __init__(self):
+        super(CrawlerJobs, self).__init__()
+
+    @swagger.doc({
+        "description":'Get a single Crawler Job.',
+        "parameters":[
+            {
+                "name": "crawler_id",
+                "in": "path",
+                "type": "string",
+                "description": "The ID of the crawler to be retrieved.",
+                "required": True
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "Retrieved Crawler Job as json."
+            }
+        } 
+    })
+    def get(self, crawler_id):
+        return mongodbConnection.get_db().crawlerJobs.find_one({"_id": crawler_id})
