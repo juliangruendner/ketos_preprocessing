@@ -13,10 +13,11 @@ NO_RESOURCE_STR = "No resource provided"
 NO_PATIENTS_STR = "No patients provided"
 
 class CrawlerJob(Resource):
+    parser = reqparse.RequestParser()
+    parser.add_argument('resource', type = str, required = True, help = NO_RESOURCE_STR, location = 'json')
+    parser.add_argument('patients', type = str, action = 'append', required = True, help = NO_PATIENTS_STR, location = 'json')
+
     def __init__(self):
-        self.parser = reqparse.RequestParser()
-        self.parser.add_argument('resource', type = str, required = True, help = NO_RESOURCE_STR, location = 'json')
-        self.parser.add_argument('patients', type = str, action = 'append', required = True, help = NO_PATIENTS_STR, location = 'json')
         super(CrawlerJob, self).__init__()
     
     @swagger.doc({
@@ -32,20 +33,16 @@ class CrawlerJob(Resource):
 
     @swagger.doc({
         "description":'Start a Crawler Job.',
-        # "parameters": [
-        #     {
-        #         "name": "payload",
-        #         "description": "Contains fields 'resource' and 'patients'",
-        #         "required": True,
-        #         "paramType": "body",
-        #         'example': {
-        #             'application/json': {
-        #                 'id': 1,
-        #                 'name': 'somebody'
-        #             }
-        #         }
-        #     }
-        # ],
+        "reqparser": {
+            "name": "crawler_parser",
+            "parser": parser
+        },
+        "parameters": [{
+            "name": "body",
+            "in": "body",
+            "required": True,
+            "description": "blabal"
+        }],
         "responses": {
             "200": {
                 "description": "Retrieved a json with the created Crawler ID."
