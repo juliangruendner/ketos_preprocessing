@@ -12,13 +12,13 @@ import json
 NO_RESOURCE_STR = "No resource provided"
 NO_PATIENTS_STR = "No patients provided"
 
-class CrawlerJob(Resource):
+class CrawlerJobs(Resource):
     parser = reqparse.RequestParser()
     parser.add_argument('resource', type = str, required = True, help = NO_RESOURCE_STR, location = 'json')
     parser.add_argument('patients', type = str, action = 'append', required = True, help = NO_PATIENTS_STR, location = 'json')
 
     def __init__(self):
-        super(CrawlerJob, self).__init__()
+        super(CrawlerJobs, self).__init__()
     
     @swagger.doc({
         "description":'Get all Crawler Jobs.',
@@ -63,9 +63,9 @@ class CrawlerJob(Resource):
 
         return {"id": str(ret.inserted_id)}
 
-class CrawlerJobs(Resource):
+class CrawlerJob(Resource):
     def __init__(self):
-        super(CrawlerJobs, self).__init__()
+        super(CrawlerJob, self).__init__()
 
     @swagger.doc({
         "description":'Get a single Crawler Job.',

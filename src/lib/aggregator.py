@@ -53,14 +53,14 @@ def aggregateCSV(crawler_id, aggtype, features):
             fieldnames.append(all_features[feature])
     else:
         for feature in features:
-            fieldnames.append(all_features[feature])
+            fieldnames.append(all_features[feature["type"]["code"]])
 
     lines = []
     for patient in result:
         row = {}
         row["subject"] = patient["_id"]
         for observation in patient["observations"]:
-            if observation["attribute"] in features or not features:
+            if observation["meta"]["attribute"].lower() in fieldnames or not features:
                 col_name = all_features[observation["attribute"]]
                 if isinstance(observation["value"], list):
                     for idx, val in enumerate(observation["value"]):

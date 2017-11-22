@@ -1,10 +1,12 @@
 from flask_restful import Resource, Api, reqparse, abort
 from lib import mongodbConnection
+from bson.objectid import ObjectId
+from flask import request
 
 
-class Features(Resource):
+class FeaturesBrowser(Resource):
     def __init__(self):
-        super(Features, self).__init__()
+        super(FeaturesBrowser, self).__init__()
 
     def get(self, crawler_id):
 
@@ -34,6 +36,29 @@ class Features(Resource):
             for attribute in patient["attributes"]:
                 if attribute["value"] is not None:
                     features[attribute["attribute"]]["counter"] += 1
-
-
         return features
+
+class FeaturesSet(Resource):
+    def __init__(self):
+        super(FeaturesSet, self).__init__()
+
+    def get(self, set_id):
+        return mongodbConnection.get_db().features.find_one({"_id": set_id})
+
+class FeaturesSets(Resource):
+    def __init__(self):
+        super(FeaturesSets, self).__init__()
+
+    def get(self):
+        return list(mongodbConnection.get_db().features.find())
+
+    def post(self):
+        data = request.get_json(force=True)
+
+        ret = mongodbConnection.get_db().features.insert_one({
+            "_id": str(ObjectId()),
+            "attributes": data["attributes"]
+        })
+
+        return {"id": str(ret.inserted_id)}
+
