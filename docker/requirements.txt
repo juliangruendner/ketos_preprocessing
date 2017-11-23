@@ -2,3 +2,4 @@ flask
 flask-restful-swagger-2
 flask-cors
 pymongo
+requests
