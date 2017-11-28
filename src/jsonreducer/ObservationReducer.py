@@ -1,5 +1,6 @@
 from .EAVReducer import EAVReducer
 from .ValueQuantityReducer import ValueQuantityReducer
+from .ValueStringReducer import ValueStringReducer
 from .CodingReducer import CodingReducer
 
 class ObservationReducer(EAVReducer):
@@ -40,6 +41,10 @@ class ObservationReducer(EAVReducer):
 
             typ = codeReducer.getReduced()
             typ["unit"] = valueReducer.getUnit()
+            value = valueReducer.getValue()
+        elif "valueString" in json :
+            valueReducer = ValueStringReducer(json)
+            typ = codeReducer.getReduced()
             value = valueReducer.getValue()
 
 
