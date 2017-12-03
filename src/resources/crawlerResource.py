@@ -7,10 +7,29 @@ from lib import mongodbConnection
 from bson.objectid import ObjectId
 from bson import json_util
 from datetime import datetime
+from lib import crawler
 import json
 
 NO_RESOURCE_STR = "No resource provided"
 NO_PATIENTS_STR = "No patients provided"
+
+class Crawler(Resource):
+    parser = reqparse.RequestParser()
+    parser.add_argument('resource', type = str, required = True, help = NO_RESOURCE_STR, location = 'json')
+    parser.add_argument('patient', type = str, required = True, help = NO_PATIENTS_STR, location = 'json')
+
+    def __init__(self):
+        super(Crawler, self).__init__()
+    
+    def post(self):
+        args = self.parser.parse_args()
+        resource = args["resource"]
+        patient = args["patient"]
+        id = str(ObjectId())
+
+        ret = crawler.crawlResourceForSubject(resource, patient, id)
+
+        return {"id": id}
 
 class CrawlerJobs(Resource):
     parser = reqparse.RequestParser()
