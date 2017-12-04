@@ -1,6 +1,7 @@
 from flask_restful import Api, reqparse, abort
 from flask_restful_swagger_2 import swagger, Resource
 from jsonreducer.ObservationReducer import ObservationReducer
+from resources import aggregationResource
 import configuration
 from flask import request
 from lib import mongodbConnection
@@ -9,6 +10,7 @@ from bson import json_util
 from datetime import datetime
 from lib import crawler
 import json
+import urllib.parse
 
 NO_RESOURCE_STR = "No resource provided"
 NO_PATIENTS_STR = "No patients provided"
@@ -17,19 +19,33 @@ class Crawler(Resource):
     parser = reqparse.RequestParser()
     parser.add_argument('resource', type = str, required = True, help = NO_RESOURCE_STR, location = 'json')
     parser.add_argument('patient', type = str, required = True, help = NO_PATIENTS_STR, location = 'json')
+    parser.add_argument('aggregation_type', type = str,location = 'json')
+    parser.add_argument('feature_id', type = str, location = 'json')
 
     def __init__(self):
         super(Crawler, self).__init__()
     
     def post(self):
+        from api import api
+
         args = self.parser.parse_args()
         resource = args["resource"]
         patient = args["patient"]
-        id = str(ObjectId())
+        aggregation_type = args["aggregation_type"]
+        feature_id = args["feature_id"]
+        crawler_id = str(ObjectId())
 
-        ret = crawler.crawlResourceForSubject(resource, patient, id)
+        crawler.crawlResourceForSubject(resource, patient, crawler_id)
+        
+        url_base = "http://{}:{}".format(configuration.WSHOST, str(configuration.WSPORT))
+        url_agg = api.url_for(aggregationResource.Aggregation, crawler_id=crawler_id)
 
-        return {"id": id}
+        url_params = {"output_type": "csv"}
+        url_params["aggregation_type"] = aggregation_type if aggregation_type is not None else "latest"
+        if feature_id is not None:
+            url_params["feature_id"] = feature_id
+
+        return {"csv_url": url_base + url_agg + "?" + urllib.parse.urlencode(url_params)}
 
 class CrawlerJobs(Resource):
     parser = reqparse.RequestParser()
