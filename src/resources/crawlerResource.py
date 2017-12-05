@@ -37,15 +37,13 @@ class Crawler(Resource):
 
         crawler.crawlResourceForSubject(resource, patient, crawler_id)
         
-        url_base = "http://{}:{}".format(configuration.WSHOST, str(configuration.WSPORT))
         url_agg = api.url_for(aggregationResource.Aggregation, crawler_id=crawler_id)
-
         url_params = {"output_type": "csv"}
         url_params["aggregation_type"] = aggregation_type if aggregation_type is not None else "latest"
         if feature_id is not None:
             url_params["feature_id"] = feature_id
 
-        return {"csv_url": url_base + url_agg + "?" + urllib.parse.urlencode(url_params)}
+        return {"csv_url": url_agg + "?" + urllib.parse.urlencode(url_params)}
 
 class CrawlerJobs(Resource):
     parser = reqparse.RequestParser()
