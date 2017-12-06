@@ -91,17 +91,23 @@ class CrawlerJobs(Resource):
         }
     })
     def post(self):
+        from api import api
+
         args = self.crawler_parser.parse_args()
         resources = {}
 
+        tmpid = str(ObjectId())
+        url_params = {"output_type": "csv", "aggregation_type": "latest"}
+
         ret = mongodbConnection.get_db().crawlerJobs.insert_one({
-            "_id": str(ObjectId()),
+            "_id": tmpid,
             "patient_ids": args["patient_ids"],
             "feature_set": args["feature_set"],
             "status": "queued",
             "finished": [],
             "queued_time": str(datetime.now()),
-            "start_time": None
+            "start_time": None,
+            "url": "http://"+configuration.HOSTEXTERN+":"+str(configuration.WSPORT)+api.url_for(aggregationResource.Aggregation, crawler_id=tmpid)+ "?" + urllib.parse.urlencode(url_params)
         })
 
         return {"id": str(ret.inserted_id)}
