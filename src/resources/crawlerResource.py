@@ -54,7 +54,7 @@ class Crawler(Resource):
         url_params = {"output_type": "csv"}
         url_params["aggregation_type"] = aggregation_type if aggregation_type is not None else "latest"
 
-        return {"csv_url": url_agg + "?" + urllib.parse.urlencode(url_params)}
+        return {"csv_url": "http://"+configuration.HOSTEXTERN+":"+str(configuration.WSPORT)+url_agg + "?" + urllib.parse.urlencode(url_params)}
 
 class CrawlerJobs(Resource):
     crawler_parser = reqparse.RequestParser(bundle_errors=True)
