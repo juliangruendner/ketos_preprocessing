@@ -16,6 +16,10 @@ def crawlResourceForSubject(resource, subject, collection, key, name):
     while next_page != None:
         request = requests.get(next_page)
         json = request.json()
+
+        if "entry" not in json:
+            return
+
         entries = json["entry"]
 
         if len(json["link"]) > 1 and json["link"][1]["relation"] == "next" :
