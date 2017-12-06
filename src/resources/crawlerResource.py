@@ -20,16 +20,8 @@ NO_FEATURES_STR = "No features provided"
 def feature_set_validator(value):
     FEATURE_SET_SCHEMA = {
         'resource': {'required': True, 'type': 'string'},
-        'params': {'required': True, 'type': 'list', 'allow_unknown': True,
-            'schema': {
-                'type': 'dict',
-                'allow_unknown': True,
-                'schema': {
-                    'name': {'type': 'string'},
-                    'value': {'type': 'string'}
-                }
-            }
-        }
+        'key': {'required': True, 'type': 'string'},
+        'value': {'required': True, 'type': 'string'}
     }
     v = Validator(FEATURE_SET_SCHEMA)
     if v.validate(value):
@@ -103,6 +95,7 @@ class CrawlerJobs(Resource):
     })
     def post(self):
         args = self.crawler_parser.parse_args()
+        resources = {}
 
         ret = mongodbConnection.get_db().crawlerJobs.insert_one({
             "_id": str(ObjectId()),
