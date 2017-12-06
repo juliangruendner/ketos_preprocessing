@@ -9,11 +9,33 @@ from bson.objectid import ObjectId
 from bson import json_util
 from datetime import datetime
 from lib import crawler
+from cerberus import Validator
 import json
 import urllib.parse
 
 NO_RESOURCE_STR = "No resource provided"
 NO_PATIENTS_STR = "No patients provided"
+NO_FEATURES_STR = "No features provided"
+
+def feature_set_validator(value):
+    FEATURE_SET_SCHEMA = {
+        'resource': {'required': True, 'type': 'string'},
+        'params': {'required': True, 'type': 'list', 'allow_unknown': True,
+            'schema': {
+                'type': 'dict',
+                'allow_unknown': True,
+                'schema': {
+                    'name': {'type': 'string'},
+                    'value': {'type': 'string'}
+                }
+            }
+        }
+    }
+    v = Validator(FEATURE_SET_SCHEMA)
+    if v.validate(value):
+        return value
+    else:
+        raise ValueError(json.dumps(v.errors))
 
 class Crawler(Resource):
     parser = reqparse.RequestParser()
@@ -46,9 +68,9 @@ class Crawler(Resource):
         return {"csv_url": url_agg + "?" + urllib.parse.urlencode(url_params)}
 
 class CrawlerJobs(Resource):
-    parser = reqparse.RequestParser()
-    parser.add_argument('resource', type = str, required = True, help = NO_RESOURCE_STR, location = 'json')
-    parser.add_argument('patients', type = str, action = 'append', required = True, help = NO_PATIENTS_STR, location = 'json')
+    crawler_parser = reqparse.RequestParser(bundle_errors=True)
+    crawler_parser.add_argument('patient_ids', type = str, action = 'append', required = True, help = NO_PATIENTS_STR, location = 'json')
+    crawler_parser.add_argument('feature_set', action= 'append', type = feature_set_validator, required = True, help = NO_FEATURES_STR, location = 'json')
 
     def __init__(self):
         super(CrawlerJobs, self).__init__()
@@ -66,10 +88,10 @@ class CrawlerJobs(Resource):
 
     @swagger.doc({
         "description":'Start a Crawler Job.',
-        "reqparser": {
-            "name": "crawler_parser",
-            "parser": parser
-        },
+        # "reqparser": {
+        #     "name": "crawler_parser"
+        #     "parser": crawler_parser
+        # },
         "responses": {
             "200": {
                 "description": "Retrieved a json with the created Crawler ID."
@@ -80,14 +102,12 @@ class CrawlerJobs(Resource):
         }
     })
     def post(self):
-        args = self.parser.parse_args()
-        resource = args["resource"]
-        patients = args["patients"]
+        args = self.crawler_parser.parse_args()
 
         ret = mongodbConnection.get_db().crawlerJobs.insert_one({
             "_id": str(ObjectId()),
-            "resource": args["resource"],
-            "patients": args["patients"],
+            "patient_ids": args["patient_ids"],
+            "feature_set": args["feature_set"],
             "status": "queued",
             "finished": [],
             "queued_time": str(datetime.now()),

@@ -2,9 +2,20 @@ from lib import mongodbConnection
 from jsonreducer.ObservationReducer import ObservationReducer
 import configuration
 import requests
+import urllib.parse
 
-def crawlResourceForSubject(resource, subject, collection):
-    next_page = configuration.HAPIFHIR_URL+resource+'?_pretty=true&subject='+subject+'&_format=json&_count=100'
+# TODO: remove subject and read from features
+def crawlResourceForSubject(resource, subject, collection, features):
+    url_params = {"_pretty": "true", "subject": subject, "_format": "json", "_count": 100}
+    for feature in features["params"]:
+        if feature["name"] in url_params.keys():
+            url_params[feature["name"]] = url_params[feature["name"]] + "," + feature["value"]
+        else:
+            url_params[feature["name"]] = feature["value"]
+
+    next_page = configuration.HAPIFHIR_URL+resource+'?'+urllib.parse.urlencode(url_params)
+    print(next_page)
+
     all_entries = []
     
     while next_page != None:
