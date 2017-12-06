@@ -5,13 +5,8 @@ import requests
 import urllib.parse
 
 # TODO: remove subject and read from features
-def crawlResourceForSubject(resource, subject, collection, features):
-    url_params = {"_pretty": "true", "subject": subject, "_format": "json", "_count": 100}
-    for feature in features["params"]:
-        if feature["name"] in url_params.keys():
-            url_params[feature["name"]] = url_params[feature["name"]] + "," + feature["value"]
-        else:
-            url_params[feature["name"]] = feature["value"]
+def crawlResourceForSubject(resource, subject, collection, key, name):
+    url_params = {"_pretty": "true", "subject": subject, "_format": "json", "_count": 100, key: name}
 
     next_page = configuration.HAPIFHIR_URL+resource+'?'+urllib.parse.urlencode(url_params)
     print(next_page)
@@ -38,13 +33,8 @@ def crawlResourceForSubject(resource, subject, collection, features):
         observations.append(reduced)
 
 
-    mongodbConnection.get_db()[collection].find_one_and_replace(
+    mongodbConnection.get_db()[collection].find_one_and_update(
         { "_id": subject },
-        { "observations" : observations},
-        new=True,
+        {"$push": { "observations" : {"$each": observations}}},
         upsert=True
     )
-
-def crawlResource(resource, subjects, job_id):
-    for subject in subjects:
-        crawlResourceForSubject(resource, subject, job_id)

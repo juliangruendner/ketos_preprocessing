@@ -25,7 +25,9 @@ class CrawlerTask(object):
                 mongodbConnection.get_db().crawlerJobs.update({"_id": next_job["_id"]}, {"$set": {"status": "running", "start_time": str(datetime.now())}})
 
                 for subject in next_job["patient_ids"]:
-                    crawler.crawlResourceForSubject(next_job["feature_set"]["resource"], subject, next_job["_id"], next_job["feature_set"])
+                    for feature in next_job["feature_set"]:
+                        crawler.crawlResourceForSubject(feature["resource"], subject, next_job["_id"], feature["key"], feature["value"])
+
                     mongodbConnection.get_db().crawlerJobs.update({"_id": next_job["_id"]}, {"$push": {"finished": subject}})
 
                 mongodbConnection.get_db().crawlerJobs.update({"_id": next_job["_id"]}, {"$set": {"status": "finished", "end_time": str(datetime.now())}})
