@@ -31,10 +31,9 @@ def feature_set_validator(value):
 
 class Crawler(Resource):
     parser = reqparse.RequestParser()
-    parser.add_argument('resource', type = str, required = True, help = NO_RESOURCE_STR, location = 'json')
-    parser.add_argument('patient', type = str, required = True, help = NO_PATIENTS_STR, location = 'json')
     parser.add_argument('aggregation_type', type = str,location = 'json')
-    parser.add_argument('feature_id', type = str, location = 'json')
+    parser.add_argument('patient', type = str, required = True, help = NO_PATIENTS_STR, location = 'json')
+    parser.add_argument('feature_set', type = feature_set_validator, action = 'append', location = 'json')
 
     def __init__(self):
         super(Crawler, self).__init__()
@@ -43,19 +42,17 @@ class Crawler(Resource):
         from api import api
 
         args = self.parser.parse_args()
-        resource = args["resource"]
         patient = args["patient"]
         aggregation_type = args["aggregation_type"]
-        feature_id = args["feature_id"]
+        feature_set = args["feature_set"]
         crawler_id = str(ObjectId())
 
-        crawler.crawlResourceForSubject(resource, patient, crawler_id)
+        for feature in feature_set:
+            crawler.crawlResourceForSubject(feature["resource"], patient, crawler_id, feature["key"], feature["value"])
         
         url_agg = api.url_for(aggregationResource.Aggregation, crawler_id=crawler_id)
         url_params = {"output_type": "csv"}
         url_params["aggregation_type"] = aggregation_type if aggregation_type is not None else "latest"
-        if feature_id is not None:
-            url_params["feature_id"] = feature_id
 
         return {"csv_url": url_agg + "?" + urllib.parse.urlencode(url_params)}
 
