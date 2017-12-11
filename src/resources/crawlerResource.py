@@ -74,7 +74,7 @@ class CrawlerJobs(Resource):
         }
     })'''
     def get(self):
-        return "buhu" #list(mongodbConnection.get_db().crawlerJobs.find())
+        return list(mongodbConnection.get_db().crawlerJobs.find())
         '''
     @swagger.doc({
         "description":'Start a Crawler Job.',
