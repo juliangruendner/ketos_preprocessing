@@ -1,5 +1,5 @@
-from flask_restful import Api, reqparse, abort
-from flask_restful_swagger_2 import swagger, Resource
+from flask_restful import Api, reqparse, abort, Resource
+# from flask_restful_swagger_2 import swagger, Resource
 from jsonreducer.ObservationReducer import ObservationReducer
 from resources import aggregationResource
 import configuration
@@ -64,17 +64,18 @@ class CrawlerJobs(Resource):
     def __init__(self):
         super(CrawlerJobs, self).__init__()
     
-    @swagger.doc({
+    
+    '''@swagger.doc({
         "description":'Get all Crawler Jobs.',
         "responses": {
             "200": {
                 "description": "Retrieved Crawler Job(s) as json."
             }
         }
-    })
+    })'''
     def get(self):
-        return list(mongodbConnection.get_db().crawlerJobs.find())
-
+        return "buhu" #list(mongodbConnection.get_db().crawlerJobs.find())
+        '''
     @swagger.doc({
         "description":'Start a Crawler Job.',
         # "reqparser": {
@@ -89,7 +90,7 @@ class CrawlerJobs(Resource):
                 "description": NO_RESOURCE_STR + " or " + NO_PATIENTS_STR
             }
         }
-    })
+    })'''
     def post(self):
         from api import api
 
@@ -115,7 +116,8 @@ class CrawlerJobs(Resource):
 class CrawlerJob(Resource):
     def __init__(self):
         super(CrawlerJob, self).__init__()
-
+    
+    '''
     @swagger.doc({
         "description":'Get a single Crawler Job.',
         "parameters":[
@@ -133,5 +135,6 @@ class CrawlerJob(Resource):
             }
         } 
     })
+    '''
     def get(self, crawler_id):
         return mongodbConnection.get_db().crawlerJobs.find_one({"_id": crawler_id})
