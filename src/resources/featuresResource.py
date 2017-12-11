@@ -68,7 +68,7 @@ class FeaturesSets(Resource):
 
     def __init__(self):
         super(FeaturesSets, self).__init__()
-
+    '''
     @swagger.doc({
         "description":'Get all feature definitions.',
         "responses": {
@@ -77,9 +77,10 @@ class FeaturesSets(Resource):
             }
         }
     })
+    '''
     def get(self):
         return list(mongodbConnection.get_db().features.find())
-
+    '''
     @swagger.doc({
         "description":'Save a feature definition.',
         "parameters": [
@@ -100,6 +101,7 @@ class FeaturesSets(Resource):
             }
         }
     })
+    '''
     def post(self):
         args = self.feature_parser.parse_args()
         ret = mongodbConnection.get_db().features.insert_one({
