@@ -25,7 +25,7 @@ api.add_resource(FeaturesSets, '/features/sets', endpoint='sets')
 
 
 if(os.environ.get("WERKZEUG_RUN_MAIN") == "true"):
-    crawlerTask.CrawlerTask(api)
+    crawlerTask.CrawlerTask(app)
 
 if __name__ == '__main__':
     # set false in production mode

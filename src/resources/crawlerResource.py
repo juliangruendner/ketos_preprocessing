@@ -113,6 +113,11 @@ class CrawlerJobs(Resource):
 
         return {"id": str(ret.inserted_id)}
 
+    def delete(self):
+        ret = mongodbConnection.get_db().crawlerJobs.delete_many({})
+
+        return ret.deleted_count
+
 class CrawlerJob(Resource):
     def __init__(self):
         super(CrawlerJob, self).__init__()

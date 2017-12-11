@@ -4,6 +4,7 @@ from lib import mongodbConnection
 from lib import crawler
 from datetime import datetime
 
+
 class CrawlerTask(object):
 
     def __init__(self, app, interval=10):

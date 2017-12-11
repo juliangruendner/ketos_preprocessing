@@ -103,7 +103,6 @@ class FeaturesSets(Resource):
     })
     def post(self):
         args = self.feature_parser.parse_args()
-
         ret = mongodbConnection.get_db().features.insert_one({
             "_id": str(ObjectId()),
             "attributes": args["attributes"]
