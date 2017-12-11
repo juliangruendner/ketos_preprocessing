@@ -1,5 +1,4 @@
-from flask_restful import Api, reqparse, abort
-from flask_restful_swagger_2 import swagger, Resource
+from flask_restful import Api, reqparse, abort, Resource
 from lib import mongodbConnection
 from models import featureModel
 from bson.objectid import ObjectId
