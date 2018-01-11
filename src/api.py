@@ -1,3 +1,7 @@
+# Use monkey patch for reloader to not break with background thread (see https://github.com/miguelgrinberg/Flask-SocketIO/issues/567#issuecomment-337120425) 
+import eventlet
+eventlet.monkey_patch()
+
 from flask import Flask
 from flask_restful_swagger_2 import Api
 from flask_cors import CORS
@@ -11,10 +15,9 @@ import os
 
 app = Flask(__name__)
 CORS(app) # this will allow cross-origin requests; needed for http://petstore.swagger.io in swaggerResource to access whole api output
-#api = Api(app, add_api_spec_resource=True, api_version='0.0', api_spec_url='/api/swagger') # Wrap the Api and add /api/swagger endpoint
-api = Api(app)
+api = Api(app, add_api_spec_resource=True, api_version='0.0', api_spec_url='/api/swagger') # Wrap the Api and add /api/swagger endpoint
 
-#api.add_resource(Swagger, '/swagger', endpoint='swaggerhtml')
+api.add_resource(Swagger, '/swagger', endpoint='swaggerhtml')
 api.add_resource(Crawler, '/crawler', endpoint='crawler')
 api.add_resource(CrawlerJobs, '/crawler/jobs', endpoint='jobs')
 api.add_resource(CrawlerJob, '/crawler/jobs/<crawler_id>', endpoint='job')
@@ -23,8 +26,8 @@ api.add_resource(FeaturesBrowser, '/features/browser/<crawler_id>', endpoint='br
 api.add_resource(FeaturesSet, '/features/sets/<set_id>', endpoint='set')
 api.add_resource(FeaturesSets, '/features/sets', endpoint='sets')
 
-
-if(os.environ.get("WERKZEUG_RUN_MAIN") == "true"):
+@app.before_first_request
+def startCrawlerThread():
     crawlerTask.CrawlerTask(app)
 
 if __name__ == '__main__':
