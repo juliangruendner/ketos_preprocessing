@@ -2,6 +2,12 @@
 import eventlet
 eventlet.monkey_patch()
 
+import logging.config
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+import logging
+logger = logging.getLogger(__name__)
+
 from flask import Flask
 from flask_restful_swagger_2 import Api
 from flask_cors import CORS
@@ -12,6 +18,7 @@ from resources.featuresResource import FeaturesBrowser, FeaturesSet, FeaturesSet
 from resources.swaggerResource import Swagger
 import configuration
 import os
+
 
 app = Flask(__name__)
 CORS(app) # this will allow cross-origin requests; needed for http://petstore.swagger.io in swaggerResource to access whole api output

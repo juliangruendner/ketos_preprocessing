@@ -3,7 +3,8 @@ import time
 from lib import mongodbConnection
 from lib import crawler
 from datetime import datetime
-
+import logging
+logger = logging.getLogger(__name__)
 
 class CrawlerTask(object):
 
@@ -20,6 +21,7 @@ class CrawlerTask(object):
                 next_job = mongodbConnection.get_db().crawlerJobs.find_one({"status": "queued"})
                 
                 if(next_job is None):
+                    logger.error("ich strate")
                     time.sleep(self.interval)
                     continue
 
