@@ -21,10 +21,10 @@ class CrawlerTask(object):
                 next_job = mongodbConnection.get_db().crawlerJobs.find_one({"status": "queued"})
                 
                 if(next_job is None):
-                    logger.error("ich strate")
                     time.sleep(self.interval)
                     continue
 
+                logger.info("executing new job")
                 mongodbConnection.get_db().crawlerJobs.update({"_id": next_job["_id"]}, {"$set": {"status": "running", "start_time": str(datetime.now())}})
 
                 for subject in next_job["patient_ids"]:
