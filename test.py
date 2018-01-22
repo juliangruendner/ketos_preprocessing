@@ -11,42 +11,50 @@ settings = {
 }
 server = client.FHIRClient(settings=settings)
 
-resource = "Condition"
+resourceName = "Condition"
 concept = {"subject": "10203"}
-mappings = {"Condition/code/text": "Condition"}
+mappings = {"Condition/code/text": "Condition", "Condition/text/status": "status", "Condition/text/acb": "abc", "Condition/meta/versionId": "version"}
 conditions = {"clinical-status": "inactive"} # maybe automatically convert from camelcase
 
 lines = []
 
+# Dynamically load module for resource
 try:
-    resource = getattr(importlib.import_module("fhirclient.models." + resource.lower()), resource)
+    resource = getattr(importlib.import_module("fhirclient.models." + resourceName.lower()), resourceName)
 except AttributeError as e:
-    print("Resource", resource, "does not exist")
+    print("Resource", resourceName, "does not exist", e)
     sys.exit()
 
+# Perform search
 try:
     searchParams = {**concept, **conditions}
     search = resource.where(searchParams)
     ret = search.perform_resources(server.server)
 except Exception as e:
-    print("Search failed")
+    print("Search failed", e)
     sys.exit()
 
 if(len(ret) == 0):
-    print("No values found for search", searchParams, "on resource", resource)
+    print("No values found for search", searchParams, "on resource", resourceName)
     sys.exit()
 
+# Map values of returned objects to new row names
 for element in ret:
     line = concept.copy()
     for resourcePath, targetName in mappings.items():
-        line[targetName] = reduce(getattr, resourcePath.split("/")[1:], element) # "deep" getattr
-        
-        # if not isinstance(line[targetName], [bool, str, int, float]):
-        #     print("Value of path", resourcePath, "is a non primitive type! Only use paths that lead to primitive types.")
-        #     sys.exit()
+        try:
+            line[targetName] = reduce(getattr, resourcePath.split("/")[1:], element) # "deep" getattr
+            
+            if not isinstance(line[targetName], (bool, str, int, float)):
+                print("Value of path", resourcePath, "is a non primitive type! Only use paths that lead to primitive types.")
+                sys.exit()
+        except AttributeError as e:
+            print("Path", resourcePath, "does not exist in", resourceName, ". None is inserted.")
+            line[targetName] = None
 
     lines.append(line)
 
+# Write .csv
 fieldnames = set(concept.keys())
 for val in mappings.values():
     fieldnames.add(val)
