@@ -33,7 +33,7 @@ class CrawlerTask(object):
 
                     else:
                         for feature in next_job["feature_set"]:
-                            crawler.crawlResourceForSubject("Observation", subject, next_job["_id"], {feature["key"]: feature["value"]})
+                            crawler.crawlObservationForSubject(next_job["_id"], feature["key"]: feature["value"])
 
                     mongodbConnection.get_db().crawlerJobs.update({"_id": next_job["_id"]}, {"$push": {"finished": subject}})
 
