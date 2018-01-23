@@ -2,8 +2,10 @@ import importlib
 import configuration
 from fhirclient import client
 from lib import mongodbConnection
+from jsonreducer.ObservationReducer import ObservationReducer
 import logging
 import requests
+import urllib
 logger = logging.getLogger(__name__)
 
 settings = {
@@ -12,7 +14,7 @@ settings = {
 }
 server = client.FHIRClient(settings=settings)
 
-def crawlObservationForSubject(subject, collection, key, value):
+def crawlObservationForSubject(subject, collection, key, name):
     url_params = {"_pretty": "true", "subject": subject, "_format": "json", "_count": 100, key: name}
 
     next_page = configuration.HAPIFHIR_URL+"Observation"+'?'+urllib.parse.urlencode(url_params)
