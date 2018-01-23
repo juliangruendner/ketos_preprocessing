@@ -6,3 +6,4 @@ requests
 cerberus
 uwsgi
 eventlet
+fhirclient==1.0.3 # update on gt-fhir update

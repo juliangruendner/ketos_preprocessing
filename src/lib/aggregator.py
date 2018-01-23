@@ -1,33 +1,32 @@
-from jsonreducer.ObservationReducer import ObservationReducer
 from lib import mongodbConnection
 import configuration
 import csv
 import io
 
 
-def aggregate(crawler_id, aggtype):
+def aggregateFeatures(crawler_id, aggtype):
     mongorequest = [
-        {"$unwind": "$observations"},
-        {"$group" : {"_id" : {"attribute": "$observations.attribute", "patient_id": "$_id"}, "entry": {"$push": "$$CURRENT.observations"}}},
+        {"$unwind": "$resourceValue"},
+        {"$group" : {"_id" : {"attribute": "$resourceValue.code.text", "patient_id": "$_id"}, "entry": {"$push": "$$CURRENT.resourceValue"}}},
         {"$unwind": "$entry"},
-        {"$sort"  : {"entry.timestamp": 1}}
+        {"$sort"  : {"entry.effectiveDateTime": 1}}
     ]
 
     if aggtype == None or aggtype.lower() == "all":
         mongorequest += [
-            {"$group" : {"_id": "$_id", "observations": {"$push": "$entry"}}},
-            {"$group" : {"_id": "$_id.patient_id", "observations": { "$push": "$$CURRENT.observations"}}}
+            {"$group" : {"_id": "$_id", "resourceValue": {"$push": "$entry"}}},
+            {"$group" : {"_id": "$_id.patient_id", "resourceValue": { "$push": "$$CURRENT.resourceValue"}}}
         ]
     elif aggtype.lower() == "latest" or aggtype.lower() == "oldest":        
         tmp = "first" if aggtype.lower() == "oldest" else "last"
         mongorequest += [
-            {"$group" : {"_id": "$_id", "observations": {"$"+tmp: "$entry"}}},
-            {"$group" : {"_id": "$_id.patient_id", "observations": { "$push": "$$CURRENT.observations"}}}
+            {"$group" : {"_id": "$_id", "resourceValue": {"$"+tmp: "$entry"}}},
+            {"$group" : {"_id": "$_id.patient_id", "resourceValue": { "$push": "$$CURRENT.resourceValue"}}}
         ]
     elif aggtype.lower() == "avg":
         mongorequest += [
-            {"$group" : {"_id": "$_id" , "attribute": { "$first": "$_id.attribute" }, "observations": { "$avg": "$entry.value"}}},
-            {"$group" : {"_id": "$_id.patient_id", "observations": { "$push": {"avg": "$$CURRENT.observations", "attribute": "$_id.attribute"}}}}
+            {"$group" : {"_id": "$_id" , "attribute": { "$first": "$_id.attribute" }, "resourceValue": { "$avg": "$entry.value"}}},
+            {"$group" : {"_id": "$_id.patient_id", "resourceValue": { "$push": {"avg": "$$CURRENT.resourceValue", "attribute": "$_id.attribute"}}}}
         ]
     else:
         return None
@@ -36,12 +35,10 @@ def aggregate(crawler_id, aggtype):
     return list(result)
 
 
-def aggregateCSV(crawler_id, aggtype, features):
-
-    result = aggregate(crawler_id, aggtype)
+def writeFeaturesCSV(aggregated, features):
     all_features = {}
-    for patient in result:
-        for observation in patient["observations"]:
+    for patient in aggregated:
+        for observation in patient["resourceValue"]:
                 all_features[observation["attribute"]] = observation["meta"]["attribute"].lower()
 
     output = io.StringIO()
@@ -56,10 +53,10 @@ def aggregateCSV(crawler_id, aggtype, features):
             fieldnames.append(all_features[feature["type"]["code"]])
 
     lines = []
-    for patient in result:
+    for patient in aggregated:
         row = {}
         row["subject"] = patient["_id"]
-        for observation in patient["observations"]:
+        for observation in patient["resourceValue"]:
             if observation["meta"]["attribute"].lower() in fieldnames or not features:
                 col_name = all_features[observation["attribute"]]
                 if isinstance(observation["value"], list):
@@ -72,6 +69,39 @@ def aggregateCSV(crawler_id, aggtype, features):
         lines.append(row)
 
     writer = csv.DictWriter(output, fieldnames=set(fieldnames))
+    writer.writeheader()
+
+    for line in lines:
+        writer.writerow(line)
+
+    return output.getvalue()
+
+def writeCSV(db_content, resourceMapping, searchParams):
+    lines = []
+
+    # Map values of returned objects to new row names
+    for element in db_content:
+        line = concept.copy()
+        for resourcePath, targetName in mappings.items():
+            try:
+                line[targetName] = reduce(getattr, resourcePath.split("/")[1:], element) # "deep" getattr
+                
+                if not isinstance(line[targetName], (bool, str, int, float)):
+                    print("Value of path", resourcePath, "is a non primitive type! Only use paths that lead to primitive types.")
+                    sys.exit()
+            except AttributeError as e:
+                print("Path", resourcePath, "does not exist in", resourceName, ". None is inserted.")
+                line[targetName] = None
+
+        lines.append(line)
+
+    # Write .csv
+    fieldnames = set(concept.keys())
+    for val in mappings.values():
+        fieldnames.add(val)
+
+    output = io.StringIO()
+    writer = csv.DictWriter(output, fieldnames=fieldnames)
     writer.writeheader()
 
     for line in lines:

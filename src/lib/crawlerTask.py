@@ -28,8 +28,12 @@ class CrawlerTask(object):
                 mongodbConnection.get_db().crawlerJobs.update({"_id": next_job["_id"]}, {"$set": {"status": "running", "start_time": str(datetime.now())}})
 
                 for subject in next_job["patient_ids"]:
-                    for feature in next_job["feature_set"]:
-                        crawler.crawlResourceForSubject(feature["resource"], subject, next_job["_id"], feature["key"], feature["value"])
+                    if next_job["resource"] is not None and next_job["resource"] is not "Observation":
+                        crawler.crawlResourceForSubject(next_job["resource"], subject, next_job["_id"], next_job["search_params"])
+
+                    else:
+                        for feature in next_job["feature_set"]:
+                            crawler.crawlResourceForSubject(feature["resource"], subject, next_job["_id"], {feature["key"]: feature["value"]})
 
                     mongodbConnection.get_db().crawlerJobs.update({"_id": next_job["_id"]}, {"$push": {"finished": subject}})
 
