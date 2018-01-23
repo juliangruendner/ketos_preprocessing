@@ -1,8 +1,9 @@
-from lib import mongodbConnection
-import configuration
 import csv
 import io
+from lib import mongodbConnection
 from functools import reduce
+import logging
+logger = logging.getLogger(__name__)
 
 def aggregateFeatures(crawler_id, aggtype):
     mongorequest = [
@@ -80,8 +81,6 @@ def writeFeaturesCSV(aggregated, features):
 def writeCSV(db_content, resourceMapping):
     lines = []
 
-    print("resourceMapping", resourceMapping)
-
     # Map values of returned objects to new row names
     for element in db_content:
         line = {"patient": element["patient"]["reference"]}
@@ -90,10 +89,10 @@ def writeCSV(db_content, resourceMapping):
                 line[targetName] = reduce(dict.get, resourcePath.split("/")[1:], element) # "deep" getattr
                 
                 if not isinstance(line[targetName], (bool, str, int, float)):
-                    print("Value of path", resourcePath, "is a non primitive type! Only use paths that lead to primitive types.")
+                    logger.error("Value of path " +resourcePath + " is a non primitive type! Only use paths that lead to primitive types.")
 
             except Exception as e:
-                print("Path", resourcePath, "does not exist in", element, ". None is inserted.")
+                logger.warn("Path " +  resourcePath + " does not exist in " + element + ". None is inserted.")
                 line[targetName] = None
 
         lines.append(line)
