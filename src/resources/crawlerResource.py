@@ -78,7 +78,7 @@ class Crawler(Resource):
             crawler.crawlResourceForSubject(resource, patient, crawler_id, searchParams)
         else:
             for feature in feature_set:
-                crawler.crawlResourceForSubject(feature["resource"], patient, crawler_id, {feature["key"]: feature["value"]})
+                crawler.crawlObservationForSubject(patient, crawler_id, feature["key"], feature["value"])
         
         mongodbConnection.get_db().crawlerJobs.update({"_id": crawler_id}, {"$set": {"status": "finished", "end_time": str(datetime.now())}})
 

@@ -6,27 +6,27 @@ import io
 
 def aggregateFeatures(crawler_id, aggtype):
     mongorequest = [
-        {"$unwind": "$resourceValue"},
-        {"$group" : {"_id" : {"attribute": "$resourceValue.code.text", "patient_id": "$_id"}, "entry": {"$push": "$$CURRENT.resourceValue"}}},
+        {"$unwind": "$observations"},
+        {"$group" : {"_id" : {"attribute": "$observations.attribute", "patient_id": "$_id"}, "entry": {"$push": "$$CURRENT.observations"}}},
         {"$unwind": "$entry"},
-        {"$sort"  : {"entry.effectiveDateTime": 1}}
+        {"$sort"  : {"entry.timestamp": 1}}
     ]
 
     if aggtype == None or aggtype.lower() == "all":
         mongorequest += [
-            {"$group" : {"_id": "$_id", "resourceValue": {"$push": "$entry"}}},
-            {"$group" : {"_id": "$_id.patient_id", "resourceValue": { "$push": "$$CURRENT.resourceValue"}}}
+            {"$group" : {"_id": "$_id", "observations": {"$push": "$entry"}}},
+            {"$group" : {"_id": "$_id.patient_id", "observations": { "$push": "$$CURRENT.observations"}}}
         ]
     elif aggtype.lower() == "latest" or aggtype.lower() == "oldest":        
         tmp = "first" if aggtype.lower() == "oldest" else "last"
         mongorequest += [
-            {"$group" : {"_id": "$_id", "resourceValue": {"$"+tmp: "$entry"}}},
-            {"$group" : {"_id": "$_id.patient_id", "resourceValue": { "$push": "$$CURRENT.resourceValue"}}}
+            {"$group" : {"_id": "$_id", "observations": {"$"+tmp: "$entry"}}},
+            {"$group" : {"_id": "$_id.patient_id", "observations": { "$push": "$$CURRENT.observations"}}}
         ]
     elif aggtype.lower() == "avg":
         mongorequest += [
-            {"$group" : {"_id": "$_id" , "attribute": { "$first": "$_id.attribute" }, "resourceValue": { "$avg": "$entry.value"}}},
-            {"$group" : {"_id": "$_id.patient_id", "resourceValue": { "$push": {"avg": "$$CURRENT.resourceValue", "attribute": "$_id.attribute"}}}}
+            {"$group" : {"_id": "$_id" , "attribute": { "$first": "$_id.attribute" }, "observations": { "$avg": "$entry.value"}}},
+            {"$group" : {"_id": "$_id.patient_id", "observations": { "$push": {"avg": "$$CURRENT.observations", "attribute": "$_id.attribute"}}}}
         ]
     else:
         return None
@@ -36,9 +36,10 @@ def aggregateFeatures(crawler_id, aggtype):
 
 
 def writeFeaturesCSV(aggregated, features):
+    features = None
     all_features = {}
     for patient in aggregated:
-        for observation in patient["resourceValue"]:
+        for observation in patient["observations"]:
                 all_features[observation["attribute"]] = observation["meta"]["attribute"].lower()
 
     output = io.StringIO()
@@ -56,7 +57,7 @@ def writeFeaturesCSV(aggregated, features):
     for patient in aggregated:
         row = {}
         row["subject"] = patient["_id"]
-        for observation in patient["resourceValue"]:
+        for observation in patient["observations"]:
             if observation["meta"]["attribute"].lower() in fieldnames or not features:
                 col_name = all_features[observation["attribute"]]
                 if isinstance(observation["value"], list):
