@@ -2,7 +2,7 @@ from lib import mongodbConnection
 import configuration
 import csv
 import io
-
+from functools import reduce
 
 def aggregateFeatures(crawler_id, aggtype):
     mongorequest = [
@@ -77,29 +77,31 @@ def writeFeaturesCSV(aggregated, features):
 
     return output.getvalue()
 
-def writeCSV(db_content, resourceMapping, searchParams):
+def writeCSV(db_content, resourceMapping):
     lines = []
+
+    print("resourceMapping", resourceMapping)
 
     # Map values of returned objects to new row names
     for element in db_content:
-        line = concept.copy()
-        for resourcePath, targetName in mappings.items():
+        line = {"patient": element["patient"]["reference"]}
+        for resourcePath, targetName in resourceMapping.items():
             try:
-                line[targetName] = reduce(getattr, resourcePath.split("/")[1:], element) # "deep" getattr
+                line[targetName] = reduce(dict.get, resourcePath.split("/")[1:], element) # "deep" getattr
                 
                 if not isinstance(line[targetName], (bool, str, int, float)):
                     print("Value of path", resourcePath, "is a non primitive type! Only use paths that lead to primitive types.")
-                    sys.exit()
-            except AttributeError as e:
-                print("Path", resourcePath, "does not exist in", resourceName, ". None is inserted.")
+
+            except Exception as e:
+                print("Path", resourcePath, "does not exist in", element, ". None is inserted.")
                 line[targetName] = None
 
         lines.append(line)
 
     # Write .csv
-    fieldnames = set(concept.keys())
-    for val in mappings.values():
-        fieldnames.add(val)
+    fieldnames = ["patient"]
+    for val in resourceMapping.values():
+        fieldnames.append(val)
 
     output = io.StringIO()
     writer = csv.DictWriter(output, fieldnames=fieldnames)

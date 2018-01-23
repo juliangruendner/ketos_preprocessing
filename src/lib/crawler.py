@@ -3,9 +3,10 @@ import configuration
 from fhirclient import client
 from lib import mongodbConnection
 from jsonreducer.ObservationReducer import ObservationReducer
-import logging
 import requests
 import urllib
+from bson.objectid import ObjectId
+import logging
 logger = logging.getLogger(__name__)
 
 settings = {
@@ -61,7 +62,8 @@ def crawlResourceForSubject(resourceName, subject, collection, searchParams):
 
     # Perform search
     try:
-        serverSearchParams = {"patient": subject, **searchParams}
+        serverSearchParams = {"patient": subject}
+        serverSearchParams = {**serverSearchParams, **searchParams} if searchParams is not None else serverSearchParams
         search = resource.where(serverSearchParams)
         ret = search.perform_resources(server.server)
     except Exception as e:
@@ -71,8 +73,10 @@ def crawlResourceForSubject(resourceName, subject, collection, searchParams):
     if(len(ret) == 0):
         logger.info("No values found for search " + serverSearchParams + " on resource " + resourceName)
 
-    mongodbConnection.get_db()[collection].find_one_and_update(
-        { "_id": subject },
-        {"$push": { "resourceValue" : {"$each": list(map(lambda x: resource.as_json(x), ret))}}},
-        upsert=True
-    )
+    insert_list = []
+    for element in ret:
+        element = resource.as_json(element)
+        element["_id"] = str(ObjectId())
+        insert_list.append(element)
+
+    mongodbConnection.get_db()[collection].insert(list(insert_list))

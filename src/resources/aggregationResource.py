@@ -22,8 +22,7 @@ class Aggregation(Resource):
         crawlerJob = mongodbConnection.get_db().crawlerJobs.find_one({"_id": crawler_id})
         resource = crawlerJob["resource"] or "Observation"
         feature_set = crawlerJob["feature_set"] or []
-        searchParams = crawlerJob["search_params"] or []
-        resourceMapping = crawlerJob["resource_mapping"] or []
+        resourceMapping = crawlerJob["resource_mapping"] or {}
 
         ret = None
         if resource == "Observation":
@@ -33,11 +32,11 @@ class Aggregation(Resource):
                 result = aggregator.writeFeaturesCSV(ret, feature_set)
                 ret = Response(result, mimetype='text/csv')
         else:
-            ret = list(mongodbConnection.get_db()[crawler_id])
+            ret = list(mongodbConnection.get_db()[crawler_id].find())
 
             if output_type == "csv":
-                result = aggregator.writeCSV(ret, resourceMapping, searchParams)
-                Response(result, mimetype='text/csv')
+                result = aggregator.writeCSV(ret, resourceMapping)
+                ret = Response(result, mimetype='text/csv')
         
         return ret
 
