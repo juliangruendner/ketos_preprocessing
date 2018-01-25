@@ -36,40 +36,32 @@ def aggregateFeatures(crawler_id, aggtype):
     return list(result)
 
 
-def writeFeaturesCSV(aggregated, features):
-    features = None
+def writeFeaturesCSV(aggregated):
     all_features = {}
     for patient in aggregated:
         for observation in patient["observations"]:
                 all_features[observation["attribute"]] = observation["meta"]["attribute"].lower()
 
-    output = io.StringIO()
-
     fieldnames = ["subject"]
-
-    if not features:
-        for feature in all_features:
-            fieldnames.append(all_features[feature])
-    else:
-        for feature in features:
-            fieldnames.append(all_features[feature["type"]["code"]])
+    for feature in all_features:
+        fieldnames.append(all_features[feature])
 
     lines = []
     for patient in aggregated:
         row = {}
         row["subject"] = patient["_id"]
         for observation in patient["observations"]:
-            if observation["meta"]["attribute"].lower() in fieldnames or not features:
-                col_name = all_features[observation["attribute"]]
-                if isinstance(observation["value"], list):
-                    for idx, val in enumerate(observation["value"]):
-                        tmp_col = col_name+"."+str(idx)
-                        row[tmp_col] = val     
-                        fieldnames.append(tmp_col) 
-                else:
-                    row[col_name] = observation["value"]
+            col_name = all_features[observation["attribute"]]
+            if isinstance(observation["value"], list):
+                for idx, val in enumerate(observation["value"]):
+                    tmp_col = col_name+"."+str(idx)
+                    row[tmp_col] = val     
+                    fieldnames.append(tmp_col) 
+            else:
+                row[col_name] = observation["value"]
         lines.append(row)
 
+    output = io.StringIO()
     writer = csv.DictWriter(output, fieldnames=set(fieldnames))
     writer.writeheader()
 

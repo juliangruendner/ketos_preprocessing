@@ -20,8 +20,10 @@ class Aggregation(Resource):
         output_type = args["output_type"]
 
         crawlerJob = mongodbConnection.get_db().crawlerJobs.find_one({"_id": crawler_id})
+        if crawlerJob["status"] != "finished":
+            return "Crawler Job did not finish yet", 404
+
         resource = crawlerJob["resource"] or "Observation"
-        feature_set = crawlerJob["feature_set"] or []
         resourceMapping = crawlerJob["resource_mapping"] or {}
 
         ret = None
@@ -29,7 +31,7 @@ class Aggregation(Resource):
             ret = aggregator.aggregateFeatures(crawler_id, aggregation_type)
 
             if output_type == "csv":
-                result = aggregator.writeFeaturesCSV(ret, feature_set)
+                result = aggregator.writeFeaturesCSV(ret)
                 ret = Response(result, mimetype='text/csv')
         else:
             ret = list(mongodbConnection.get_db()[crawler_id].find())
