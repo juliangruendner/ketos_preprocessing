@@ -4,7 +4,7 @@ from lib import mongodbConnection
 import requests
 import configuration
 from pymongo import ReturnDocument
-from lib import aggregator
+from lib import aggregator, resourceLoader
 from flask import Response
 from bson.objectid import ObjectId
 
@@ -12,13 +12,13 @@ NO_RESOURCE_NAME_STR = "No resource name provided!"
 NO_RESOURCE_MAPPING_STR = "No resource mapping provided!"
 
 def insert_resource_config(resource_name, resource_mapping):
-    ret = mongodbConnection.get_db().resourceConfig.find_one_and_update(
-        {"resource_name" : resource_name},
-        {"$set": {"resource_name" : resource_name, "resource_mapping" : resource_mapping}},
-        upsert=True,
-        return_document=ReturnDocument.AFTER
+    mongodbConnection.get_db().resourceConfig.find_one_and_delete({"resource_name" : resource_name})
+    mongodbConnection.get_db().resourceConfig.insert_one(
+        {"_id": resource_name, "resource_name" : resource_name, "resource_mapping" : resource_mapping}
     )
 
+    ret = mongodbConnection.get_db().resourceConfig.find_one({"resource_name" : resource_name})
+    resourceLoader.writeResource(ret)
     return ret
 
 class ResourceConfigList(Resource):

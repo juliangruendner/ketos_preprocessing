@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 from flask import Flask
 from flask_restful_swagger_2 import Api
 from flask_cors import CORS
-from lib import crawlerTask
+from lib import crawlerTask, resourceLoader
 from resources.crawlerResource import Crawler, CrawlerJob, CrawlerJobs 
 from resources.aggregationResource import Aggregation
 from resources.swaggerResource import Swagger
@@ -35,6 +35,11 @@ api.add_resource(ResourceConfig, '/resources_config/<resource_name>', endpoint='
 @app.before_first_request
 def startCrawlerThread():
     crawlerTask.CrawlerTask(app)
+
+@app.before_first_request
+def loadResources():
+    with app.app_context():
+        resourceLoader.loadResources()
 
 if __name__ == '__main__':
     # set false in production mode

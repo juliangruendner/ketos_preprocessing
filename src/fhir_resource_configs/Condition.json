@@ -1,0 +1,8 @@
+{
+    "_id": "Condition",
+    "resource_name": "Condition",
+    "resource_mapping": {
+        "Condition/code/text": "Condition",
+        "Condition/text/status": "status"
+    }
+}
