@@ -44,15 +44,16 @@ class Crawler(Resource):
         from api import api
 
         args = self.parser.parse_args()
+
+        if (args["feature_set"] is None and args["resource"] is None) or (args["feature_set"] is not None and args["resource"] is not None):
+            return XOR_RESOURCE_FEATURE_SET, 400
+
         patient = args["patient"]
         aggregation_type = args["aggregation_type"]
         resource = args["resource"]
         searchParams = args["search_params"]
-        resourceMapping = args["resource_mapping"]
+        resourceMapping = args["resource_mapping"] or mongodbConnection.get_db().resourceConfig.find_one({"resource_name": resource})["resource_mapping"]
         feature_set = args["feature_set"]
-
-        if (args["feature_set"] is None and args["resource"] is None) or (args["feature_set"] is not None and args["resource"] is not None):
-            return XOR_RESOURCE_FEATURE_SET, 400
 
         crawler_id = str(ObjectId())
         url_agg = api.url_for(aggregationResource.Aggregation, crawler_id=crawler_id)
@@ -125,6 +126,8 @@ class CrawlerJobs(Resource):
         if (args["feature_set"] is None and args["resource"] is None) or (args["feature_set"] is not None and args["resource"] is not None):
             return XOR_RESOURCE_FEATURE_SET, 400
 
+        resourceMapping = args["resource_mapping"] or mongodbConnection.get_db().resourceConfig.find_one({"resource_name": resource})[resource_mapping]
+
         tmpid = str(ObjectId())
         url_params = {"output_type": "csv", "aggregation_type": "latest"}
 
@@ -134,7 +137,7 @@ class CrawlerJobs(Resource):
             "feature_set": args["feature_set"],
             "resource": args["resource"],
             "search_params": args["search_params"],
-            "resource_mapping": args["resource_mapping"],
+            "resource_mapping": resourceMapping,
             "status": "queued",
             "finished": [],
             "queued_time": str(datetime.now()),

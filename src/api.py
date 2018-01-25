@@ -15,6 +15,7 @@ from lib import crawlerTask
 from resources.crawlerResource import Crawler, CrawlerJob, CrawlerJobs 
 from resources.aggregationResource import Aggregation
 from resources.swaggerResource import Swagger
+from resources.resourceConfigResource import ResourceConfig, ResourceConfigList
 import configuration
 import os
 
@@ -28,6 +29,8 @@ api.add_resource(Crawler, '/crawler', endpoint='crawler')
 api.add_resource(CrawlerJobs, '/crawler/jobs', endpoint='jobs')
 api.add_resource(CrawlerJob, '/crawler/jobs/<crawler_id>', endpoint='job')
 api.add_resource(Aggregation, '/aggregation/<crawler_id>', endpoint='aggregation')
+api.add_resource(ResourceConfigList, '/resources_config', endpoint='resources_list')
+api.add_resource(ResourceConfig, '/resources_config/<resource_name>', endpoint='resources')
 
 @app.before_first_request
 def startCrawlerThread():
