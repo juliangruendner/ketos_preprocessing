@@ -92,7 +92,7 @@ def writeCSV(db_content, resourceMapping):
                     logger.error("Value of path " +resourcePath + " is a non primitive type! Only use paths that lead to primitive types.")
 
             except Exception as e:
-                logger.warn("Path " +  resourcePath + " does not exist in " + element + ". None is inserted.")
+                logger.warn("Path " +  resourcePath + " does not exist in element with id " + element["id"] + ". None is inserted.")
                 line[targetName] = None
 
         lines.append(line)

@@ -14,7 +14,6 @@ from flask_cors import CORS
 from lib import crawlerTask
 from resources.crawlerResource import Crawler, CrawlerJob, CrawlerJobs 
 from resources.aggregationResource import Aggregation
-#from resources.featuresResource import FeaturesBrowser, FeaturesSet, FeaturesSets
 from resources.swaggerResource import Swagger
 import configuration
 import os
@@ -29,9 +28,6 @@ api.add_resource(Crawler, '/crawler', endpoint='crawler')
 api.add_resource(CrawlerJobs, '/crawler/jobs', endpoint='jobs')
 api.add_resource(CrawlerJob, '/crawler/jobs/<crawler_id>', endpoint='job')
 api.add_resource(Aggregation, '/aggregation/<crawler_id>', endpoint='aggregation')
-#api.add_resource(FeaturesBrowser, '/features/browser/<crawler_id>', endpoint='browser')
-#api.add_resource(FeaturesSet, '/features/sets/<set_id>', endpoint='set')
-#api.add_resource(FeaturesSets, '/features/sets', endpoint='sets')
 
 @app.before_first_request
 def startCrawlerThread():
