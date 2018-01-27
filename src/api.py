@@ -2,11 +2,10 @@
 import eventlet
 eventlet.monkey_patch()
 
-import logging.config
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-
+import json
 import logging
-logger = logging.getLogger(__name__)
+import logging.config
+logging.config.dictConfig(json.load(open("logging_config.json", "r")))
 
 from flask import Flask
 from flask_restful_swagger_2 import Api
