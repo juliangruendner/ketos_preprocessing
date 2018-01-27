@@ -1,15 +1,28 @@
 from flask_restful import reqparse, abort
 from flask_restful_swagger_2 import Api, swagger, Resource
 from lib import mongodbConnection
+import json
 import requests
 import configuration
 from pymongo import ReturnDocument
 from lib import aggregator, resourceLoader
 from flask import Response
+from cerberus import Validator
 from bson.objectid import ObjectId
 
 NO_RESOURCE_NAME_STR = "No resource name provided!"
 NO_RESOURCE_MAPPING_STR = "No resource mapping provided!"
+
+def resource_mapping_validator(value):
+    FEATURE_SET_SCHEMA = {
+        'resource_path': {'required': True, 'type': 'string'},
+        'result_path': {'required': True, 'type': 'string'}
+    }
+    v = Validator(FEATURE_SET_SCHEMA)
+    if v.validate(value):
+        return value
+    else:
+        raise ValueError(json.dumps(v.errors))
 
 def insert_resource_config(resource_name, resource_mapping):
     mongodbConnection.get_db().resourceConfig.find_one_and_delete({"resource_name" : resource_name})
@@ -25,7 +38,7 @@ class ResourceConfigList(Resource):
     def __init__(self):
         self.parser = reqparse.RequestParser()
         self.parser.add_argument('resource_name', type = str, required = True, help = NO_RESOURCE_NAME_STR, location = 'json')
-        self.parser.add_argument('resource_mapping', type = dict, required = True, help = NO_RESOURCE_MAPPING_STR, location = 'json')
+        self.parser.add_argument('resource_mapping', type = resource_mapping_validator, action = 'append', required = True, help = NO_RESOURCE_MAPPING_STR, location = 'json')
 
         super(ResourceConfigList, self).__init__()
     
@@ -42,7 +55,7 @@ class ResourceConfigList(Resource):
 class ResourceConfig(Resource):
     def __init__(self):
         self.parser = reqparse.RequestParser()
-        self.parser.add_argument('resource_mapping', type = dict, required = True, help = NO_RESOURCE_MAPPING_STR, location = 'json')
+        self.parser.add_argument('resource_mapping', type = resource_mapping_validator, action = 'append', required = True, help = NO_RESOURCE_MAPPING_STR, location = 'json')
 
         super(ResourceConfig, self).__init__()
 

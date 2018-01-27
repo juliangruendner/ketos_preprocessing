@@ -46,7 +46,7 @@ def writeResource(resource_config):
         config_file = open(path,'w')
         config_file.write(str(json.dumps(resource_copy, indent=4)))
 
-        logger.info("Updated resource " + file_content["resource_name"] + " of file " + path + " to db.")
+        logger.info("Updated resource " + resource_copy["resource_name"] + " of file " + path + " to db.")
     except Exception:
         logger.error("Writing to resource file " + path + " failed", exc_info=1)
         config_file = open(path,'w')
