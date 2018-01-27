@@ -1,8 +1,13 @@
 {
     "_id": "Condition",
     "resource_name": "Condition",
-    "resource_mapping": {
-        "Condition/code/text": "Condition",
-        "Condition/text/status": "status"
-    }
+    "resource_mapping": [ {
+            "resource_path": "Condition/code/text",
+            "result_path": "Condition"
+        },
+        {
+            "resource_path": "Condition/status",
+            "result_path": "status"
+        }
+    ] 
 }

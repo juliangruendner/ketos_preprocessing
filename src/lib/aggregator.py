@@ -76,23 +76,24 @@ def writeCSV(db_content, resourceMapping):
     # Map values of returned objects to new row names
     for element in db_content:
         line = {"patient": element["patient"]["reference"]}
-        for resourcePath, targetName in resourceMapping.items():
+        for mapping in resourceMapping:
+
             try:
-                line[targetName] = reduce(dict.get, resourcePath.split("/")[1:], element) # "deep" getattr
+                line[mapping["result_path"]] = reduce(dict.get, mapping["resource_path"].split("/")[1:], element) # "deep" getattr
                 
-                if not isinstance(line[targetName], (bool, str, int, float)):
-                    logger.error("Value of path " +resourcePath + " is a non primitive type! Only use paths that lead to primitive types.")
+                if not isinstance(line[mapping["result_path"]], (bool, str, int, float)):
+                    logger.error("Value of path " + mapping["resource_path"] + " is a non primitive type! Only use paths that lead to primitive types.")
 
             except Exception as e:
-                logger.warn("Path " +  resourcePath + " does not exist in element with id " + element["id"] + ". None is inserted.")
-                line[targetName] = None
+                logger.warn("Path " + mapping["resource_path"] + " does not exist in element with id " + element["id"] + ". None is inserted.")
+                line[mapping["result_path"]] = None
 
         lines.append(line)
 
     # Write .csv
     fieldnames = ["patient"]
-    for val in resourceMapping.values():
-        fieldnames.append(val)
+    for element in resourceMapping:
+        fieldnames.append(element["result_path"])
 
     output = io.StringIO()
     writer = csv.DictWriter(output, fieldnames=fieldnames)
