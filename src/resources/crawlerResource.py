@@ -29,10 +29,21 @@ def feature_set_validator(value):
     else:
         raise ValueError(json.dumps(v.errors))
 
+def resource_mapping_validator(value):
+    FEATURE_SET_SCHEMA = {
+        'resource_path': {'required': True, 'type': 'string'},
+        'result_path': {'required': True, 'type': 'string'}
+    }
+    v = Validator(FEATURE_SET_SCHEMA)
+    if v.validate(value):
+        return value
+    else:
+        raise ValueError(json.dumps(v.errors))
+
 parser = reqparse.RequestParser(bundle_errors=True)
 parser.add_argument('resource', type = str, location = 'json')
 parser.add_argument('search_params', type = dict, location = 'json')
-parser.add_argument('resource_mapping', type = dict, location = 'json')
+parser.add_argument('resource_mapping', type = resource_mapping_validator, action = 'append', location = 'json')
 parser.add_argument('feature_set', type = feature_set_validator, action = 'append', location = 'json')
 parser.add_argument('aggregation_type', type = str, location = 'json')
 
