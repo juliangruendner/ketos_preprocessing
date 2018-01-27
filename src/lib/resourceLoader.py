@@ -14,13 +14,22 @@ def loadResources():
     for f in os.listdir(searchDir):
         path = os.path.join(searchDir, f)
         if os.path.isfile(path):
-            config_file = open(path,'r')
-            file_content = json.loads(config_file.read())
+            try:
+                config_file = open(path,'r')
+                file_content = json.loads(config_file.read())
 
-            mongodbConnection.get_db().resourceConfig.find_one_and_delete({"resource_name" : file_content["resource_name"]})
-            mongodbConnection.get_db().resourceConfig.insert_one(
-                {"_id": file_content["resource_name"], "resource_name" : file_content["resource_name"], "resource_mapping" : file_content["resource_mapping"]}
-            )
+                if(file_content["resource_name"] is None or file_content["resource_mapping"] is None):
+                    raise ValueError('Wrong format of file. Must contain fields resource_name and resource_mapping.')
+
+                mongodbConnection.get_db().resourceConfig.find_one_and_delete({"resource_name" : file_content["resource_name"]})
+                mongodbConnection.get_db().resourceConfig.insert_one(
+                    {"_id": file_content["resource_name"], "resource_name" : file_content["resource_name"], "resource_mapping" : file_content["resource_mapping"]}
+                )
+
+                logger.info("Added resource " + file_content["resource_name"] + " of file " + path + " to db.")
+            except Exception:
+                logger.error("Reading resource file " + path + " failed. Skipping.", exc_info=1)
+                continue
 
             config_file.close()
 
@@ -36,6 +45,8 @@ def writeResource(resource_config):
     try:
         config_file = open(path,'w')
         config_file.write(str(json.dumps(resource_copy, indent=4)))
+
+        logger.info("Updated resource " + file_content["resource_name"] + " of file " + path + " to db.")
     except Exception:
         logger.error("Writing to resource file " + path + " failed", exc_info=1)
         config_file = open(path,'w')
