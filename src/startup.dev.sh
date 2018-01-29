@@ -1,3 +1,3 @@
 #!/bin/bash
 pip3 install -r requirements.txt
-uwsgi --ini uwsgi.ini
+python3 ../src/api.py
