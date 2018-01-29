@@ -38,9 +38,12 @@ def writeResource(resource_config):
     config_dir = os.path.join(os.path.dirname(__file__), '../fhir_resource_configs')
     path = os.path.join(config_dir, resource_copy["resource_name"] + ".json")
 
-    read_config_file = open(path, 'r')
-    read_config_file_content = read_config_file.read()
-    read_config_file.close()
+    restore = False
+    if os.path.isfile(path):
+        restore = True
+        read_config_file = open(path, 'r')
+        read_config_file_content = read_config_file.read()
+        read_config_file.close()
 
     try:
         config_file = open(path,'w')
@@ -49,8 +52,9 @@ def writeResource(resource_config):
         logger.info("Updated resource " + resource_copy["resource_name"] + " of file " + path + " to db.")
     except Exception:
         logger.error("Writing to resource file " + path + " failed", exc_info=1)
-        config_file = open(path,'w')
-        config_file.write(read_config_file_content)
+        if restore:
+            config_file = open(path,'w')
+            config_file.write(read_config_file_content)
 
     config_file.close()
 
