@@ -58,3 +58,9 @@ def writeResource(resource_config):
 
     config_file.close()
 
+def deleteResource(resource_name):
+    config_dir = os.path.join(os.path.dirname(__file__), '../fhir_resource_configs')
+    path = os.path.join(config_dir, resource_name + ".json")
+
+    if os.path.isfile(path):
+        os.remove(path)

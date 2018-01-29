@@ -34,6 +34,10 @@ def insert_resource_config(resource_name, resource_mapping):
     resourceLoader.writeResource(ret)
     return ret
 
+def remove_resource_config(resource_name):
+    resourceLoader.deleteResource(resource_name)
+    return mongodbConnection.get_db().resourceConfig.find_one_and_delete({"resource_name" : resource_name})
+
 class ResourceConfigList(Resource):
     def __init__(self):
         self.parser = reqparse.RequestParser()
@@ -52,6 +56,14 @@ class ResourceConfigList(Resource):
 
         return insert_resource_config(resource_name, resource_mapping)
 
+    def delete(self):
+        args = self.parser.parse_args()
+        resource_name = args["resource_name"]
+
+        remove_resource_config(resource_name)
+
+        return resource_name, 200
+
 class ResourceConfig(Resource):
     def __init__(self):
         self.parser = reqparse.RequestParser()
@@ -67,4 +79,9 @@ class ResourceConfig(Resource):
         resource_mapping = args["resource_mapping"]
 
         return insert_resource_config(resource_name, resource_mapping)
+
+    def delete(self, resource_name):
+        remove_resource_config(resource_name)
+
+        return resource_name, 200
 
