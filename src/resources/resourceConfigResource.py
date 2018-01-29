@@ -62,7 +62,7 @@ class ResourceConfigList(Resource):
 
         remove_resource_config(resource_name)
 
-        return resource_name, 200
+        return {"resource_name": resource_name} , 200
 
 class ResourceConfig(Resource):
     def __init__(self):
@@ -83,5 +83,5 @@ class ResourceConfig(Resource):
     def delete(self, resource_name):
         remove_resource_config(resource_name)
 
-        return resource_name, 200
+        return {"resource_name": resource_name}, 200
 

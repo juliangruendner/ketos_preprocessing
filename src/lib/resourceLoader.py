@@ -63,4 +63,5 @@ def deleteResource(resource_name):
     path = os.path.join(config_dir, resource_name + ".json")
 
     if os.path.isfile(path):
+        logger.info("Removing resource file " + resource_name)
         os.remove(path)
