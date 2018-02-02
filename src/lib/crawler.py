@@ -26,6 +26,7 @@ def createCrawlerJob(crawler_id, crawler_status, patient_ids, feature_set, aggre
     url_params = {"output_type": "csv", "aggregation_type": aggregation_type}
     url = "http://"+configuration.HOSTEXTERN+":"+str(configuration.WSPORT)+api.url_for(aggregationResource.Aggregation, crawler_id=crawler_id)+ "?" + urllib.parse.urlencode(url_params)
 
+    # TODO: add resource configurations as fields that overwrite default, e.g. "Condition": {...}
     crawlerJob =  {
         "_id": crawler_id,
         "patient_ids": patient_ids,
@@ -122,6 +123,7 @@ def crawlResourceForSubject(resourceName, subject, collection, key, name):
     for element in ret:
         element = resource.as_json(element)
         element["_id"] = str(ObjectId())
+        element["feature"] = name # Add this for later selection in aggregation
         insert_list.append(element)
 
     mongodbConnection.get_db()[collection].insert(list(insert_list))

@@ -1,4 +1,8 @@
 {
     "_id": "Condition",
-    "resource_value_relative_path": "verificationStatus"
+    "resource_value_relative_path": "verificationStatus",
+    "sort_order": [
+        "onsetDateTime",
+        "onsetPeriod/end"
+    ]
 }

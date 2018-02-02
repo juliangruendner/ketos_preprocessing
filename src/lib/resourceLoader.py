@@ -23,7 +23,7 @@ def loadResources():
 
                 mongodbConnection.get_db().resourceConfig.find_one_and_delete({"_id" : file_content["_id"]})
                 mongodbConnection.get_db().resourceConfig.insert_one(
-                    {"_id": file_content["_id"], "resource_value_relative_path" : file_content["resource_value_relative_path"]}
+                    {"_id": file_content["_id"], "resource_value_relative_path": file_content["resource_value_relative_path"], "sort_order": file_content["sort_order"]}
                 )
 
                 logger.info("Added resource " + file_content["_id"] + " of file " + path + " to db.")
