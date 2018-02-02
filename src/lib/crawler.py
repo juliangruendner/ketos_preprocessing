@@ -17,20 +17,11 @@ settings = {
 }
 server = client.FHIRClient(settings=settings)
 
-def createCrawlerJob(crawler_id, crawler_status, patient_ids, feature_set, resource, search_params, resource_mapping, aggregation_type):
+def createCrawlerJob(crawler_id, crawler_status, patient_ids, feature_set, aggregation_type):
     from api import api
 
     if isinstance(patient_ids, str):
         patient_ids = [patient_ids]
-    
-    # Get mapping from db if no resource_mapping is given
-    if resource_mapping is None:
-        resource_mapping = mongodbConnection.get_db().resourceConfig.find_one({"resource_name": resource})
-        if resource_mapping is not None:
-            resource_mapping = resource_mapping["resource_mapping"]
-
-    if aggregation_type is None:
-        aggregation_type = "latest"
 
     url_params = {"output_type": "csv", "aggregation_type": aggregation_type}
     url = "http://"+configuration.HOSTEXTERN+":"+str(configuration.WSPORT)+api.url_for(aggregationResource.Aggregation, crawler_id=crawler_id)+ "?" + urllib.parse.urlencode(url_params)
@@ -39,9 +30,6 @@ def createCrawlerJob(crawler_id, crawler_status, patient_ids, feature_set, resou
         "_id": crawler_id,
         "patient_ids": patient_ids,
         "feature_set": feature_set,
-        "resource": resource,
-        "search_params": search_params,
-        "resource_mapping": resource_mapping,
         "status": crawler_status,
         "finished": [],
         "queued_time": str(datetime.now()),
@@ -57,13 +45,12 @@ def executeCrawlerJob(crawlerJob):
     
     try:
         for subject in crawlerJob["patient_ids"]:
-            if crawlerJob["resource"] is not None and crawlerJob["resource"] is not "Observation":
-                crawlResourceForSubject(crawlerJob["resource"], subject, crawlerJob["_id"], crawlerJob["search_params"])
-
-            else:
-                for feature in crawlerJob["feature_set"]:
+            for feature in crawlerJob["feature_set"]:
+                if feature["resource"] == "Observation":
                     crawlObservationForSubject(subject, crawlerJob["_id"], feature["key"], feature["value"])
-
+                else:
+                    crawlResourceForSubject(feature["resource"], subject, crawlerJob["_id"], feature["key"], feature["value"])
+             
             mongodbConnection.get_db().crawlerJobs.update({"_id": crawlerJob["_id"]}, {"$push": {"finished": subject}})
 
         mongodbConnection.get_db().crawlerJobs.update({"_id": crawlerJob["_id"]}, {"$set": {"status": "finished", "end_time": str(datetime.now())}})
@@ -111,7 +98,7 @@ def crawlObservationForSubject(subject, collection, key, name):
         upsert=True
     )
 
-def crawlResourceForSubject(resourceName, subject, collection, searchParams):
+def crawlResourceForSubject(resourceName, subject, collection, key, name):
     # Dynamically load module for resource
     try:
         resource = getattr(importlib.import_module("fhirclient.models." + resourceName.lower()), resourceName)
@@ -121,8 +108,7 @@ def crawlResourceForSubject(resourceName, subject, collection, searchParams):
 
     # Perform search
     try:
-        serverSearchParams = {"patient": subject}
-        serverSearchParams = {**serverSearchParams, **searchParams} if searchParams is not None else serverSearchParams
+        serverSearchParams = {"patient": subject, key: name}
         search = resource.where(serverSearchParams)
         ret = search.perform_resources(server.server)
     except Exception as e:

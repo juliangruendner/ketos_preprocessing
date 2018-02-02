@@ -1,14 +1,4 @@
 {
     "_id": "Condition",
-    "resource_name": "Condition",
-    "resource_mapping": [
-        {
-            "resource_path": "Condition/code/text",
-            "result_path": "Condition"
-        },
-        {
-            "resource_path": "Condition/status",
-            "result_path": "status"
-        }
-    ]
+    "resource_value_relative_path": "verificationStatus"
 }

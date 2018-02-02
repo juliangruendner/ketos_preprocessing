@@ -18,15 +18,15 @@ def loadResources():
                 config_file = open(path,'r')
                 file_content = json.loads(config_file.read())
 
-                if(file_content["resource_name"] is None or file_content["resource_mapping"] is None):
-                    raise ValueError('Wrong format of file. Must contain fields resource_name and resource_mapping.')
+                if(file_content["_id"] is None or file_content["resource_value_relative_path"] is None):
+                    raise ValueError('Wrong format of file. Must contain fields "_id" and "resource_value_relative_path".')
 
-                mongodbConnection.get_db().resourceConfig.find_one_and_delete({"resource_name" : file_content["resource_name"]})
+                mongodbConnection.get_db().resourceConfig.find_one_and_delete({"_id" : file_content["_id"]})
                 mongodbConnection.get_db().resourceConfig.insert_one(
-                    {"_id": file_content["resource_name"], "resource_name" : file_content["resource_name"], "resource_mapping" : file_content["resource_mapping"]}
+                    {"_id": file_content["_id"], "resource_value_relative_path" : file_content["resource_value_relative_path"]}
                 )
 
-                logger.info("Added resource " + file_content["resource_name"] + " of file " + path + " to db.")
+                logger.info("Added resource " + file_content["_id"] + " of file " + path + " to db.")
             except Exception:
                 logger.error("Reading resource file " + path + " failed. Skipping.", exc_info=1)
                 continue
@@ -36,7 +36,7 @@ def loadResources():
 def writeResource(resource_config):
     resource_copy = copy.copy(resource_config)
     config_dir = os.path.join(os.path.dirname(__file__), '../fhir_resource_configs')
-    path = os.path.join(config_dir, resource_copy["resource_name"] + ".json")
+    path = os.path.join(config_dir, resource_copy["_id"] + ".json")
 
     restore = False
     if os.path.isfile(path):
@@ -49,7 +49,7 @@ def writeResource(resource_config):
         config_file = open(path,'w')
         config_file.write(str(json.dumps(resource_copy, indent=4)))
 
-        logger.info("Updated resource " + resource_copy["resource_name"] + " of file " + path + " to db.")
+        logger.info("Updated resource " + resource_copy["_id"] + " of file " + path + " to db.")
     except Exception:
         logger.error("Writing to resource file " + path + " failed", exc_info=1)
         if restore:

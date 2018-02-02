@@ -14,8 +14,8 @@ import urllib.parse
 import logging
 logger = logging.getLogger(__name__)
 
+
 NO_PATIENTS_STR = "No patients provided"
-XOR_RESOURCE_FEATURE_SET = "No resource XOR feature_set provided"
 
 def feature_set_validator(value):
     FEATURE_SET_SCHEMA = {
@@ -41,11 +41,8 @@ def resource_mapping_validator(value):
         raise ValueError(json.dumps(v.errors))
 
 parser = reqparse.RequestParser(bundle_errors=True)
-parser.add_argument('resource', type = str, location = 'json')
-parser.add_argument('search_params', type = dict, location = 'json')
-parser.add_argument('resource_mapping', type = resource_mapping_validator, action = 'append', location = 'json')
-parser.add_argument('feature_set', type = feature_set_validator, action = 'append', location = 'json')
-parser.add_argument('aggregation_type', type = str, location = 'json')
+parser.add_argument('feature_set', type = feature_set_validator, action = 'append', required = True, location = 'json')
+parser.add_argument('aggregation_type', type = str, default="latest", location = 'json')
 
 
 class Crawler(Resource):
@@ -55,15 +52,11 @@ class Crawler(Resource):
     def __init__(self):
         super(Crawler, self).__init__()
     
-    # Synchronous version of crawler
+    # Synchronous version of crawler for single patient
     def post(self):
         args = self.crawler_parser.parse_args()
 
-        if (args["feature_set"] is None and args["resource"] is None) or (args["feature_set"] is not None and args["resource"] is not None):
-            return XOR_RESOURCE_FEATURE_SET, 400
-
-        crawlerJob = crawler.createCrawlerJob(str(ObjectId()), "running", args["patient"], args["feature_set"], 
-            args["resource"], args["search_params"], args["resource_mapping"], args["aggregation_type"])
+        crawlerJob = crawler.createCrawlerJob(str(ObjectId()), "running", args["patient"], args["feature_set"], args["aggregation_type"])
         crawlerStatus = crawler.executeCrawlerJob(crawlerJob)
 
         return {"csv_url": crawlerJob["url"], "crawler_status": crawlerStatus}
@@ -94,17 +87,14 @@ class CrawlerJobs(Resource):
                 "description": "Retrieved a json with the created Crawler ID."
             },
             "400": {
-                "description": NO_PATIENTS_STR + " or " + XOR_RESOURCE_FEATURE_SET
+                "description": NO_PATIENTS_STR
             }
         }
     })
     def post(self):
         args = self.crawler_parser.parse_args()
-        if (args["feature_set"] is None and args["resource"] is None) or (args["feature_set"] is not None and args["resource"] is not None):
-            return XOR_RESOURCE_FEATURE_SET, 400
 
-        crawlerJob = crawler.createCrawlerJob(str(ObjectId()), "queued", args["patient_ids"], args["feature_set"], 
-            args["resource"], args["search_params"], args["resource_mapping"], args["aggregation_type"])
+        crawlerJob = crawler.createCrawlerJob(str(ObjectId()), "queued", args["patient_ids"], args["feature_set"], args["aggregation_type"])
 
         return {"id": crawlerJob["_id"]}
 
