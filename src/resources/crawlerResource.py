@@ -21,7 +21,8 @@ def feature_set_validator(value):
     FEATURE_SET_SCHEMA = {
         'resource': {'required': True, 'type': 'string'},
         'key': {'required': True, 'type': 'string'},
-        'value': {'required': True, 'type': 'string'}
+        'value': {'required': True, 'type': 'string'},
+        'name': {'type': 'string'}
     }
     v = Validator(FEATURE_SET_SCHEMA)
     if v.validate(value):

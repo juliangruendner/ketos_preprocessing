@@ -50,7 +50,7 @@ def executeCrawlerJob(crawlerJob):
                 if feature["resource"] == "Observation":
                     crawlObservationForSubject(subject, crawlerJob["_id"], feature["key"], feature["value"])
                 else:
-                    crawlResourceForSubject(feature["resource"], subject, crawlerJob["_id"], feature["key"], feature["value"])
+                    crawlResourceForSubject(feature["resource"], subject, crawlerJob["_id"], feature["key"], feature["value"], feature["name"])
              
             mongodbConnection.get_db().crawlerJobs.update({"_id": crawlerJob["_id"]}, {"$push": {"finished": subject}})
 
@@ -99,7 +99,7 @@ def crawlObservationForSubject(subject, collection, key, name):
         upsert=True
     )
 
-def crawlResourceForSubject(resourceName, subject, collection, key, name):
+def crawlResourceForSubject(resourceName, subject, collection, key, value, name):
     # Dynamically load module for resource
     try:
         resource = getattr(importlib.import_module("fhirclient.models." + resourceName.lower()), resourceName)
@@ -109,7 +109,7 @@ def crawlResourceForSubject(resourceName, subject, collection, key, name):
 
     # Perform search
     try:
-        serverSearchParams = {"patient": subject, key: name}
+        serverSearchParams = {"patient": subject, key: value}
         search = resource.where(serverSearchParams)
         ret = search.perform_resources(server.server)
     except Exception as e:
@@ -123,7 +123,8 @@ def crawlResourceForSubject(resourceName, subject, collection, key, name):
     for element in ret:
         element = resource.as_json(element)
         element["_id"] = str(ObjectId())
-        element["feature"] = name # Add this for later selection in aggregation
+        element["feature"] = value # Add this for later selection in aggregation
+        element["name"] = name if name is not None else value
         insert_list.append(element)
 
     mongodbConnection.get_db()[collection].insert(list(insert_list))
