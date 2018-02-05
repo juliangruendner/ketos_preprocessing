@@ -96,6 +96,7 @@ def crawlObservationForSubject(subject, collection, key, name):
     mongodbConnection.get_db()[collection].find_one_and_update(
         { "_id": subject },
         {"$push": { "observations" : {"$each": observations}}},
+        {"resource": "Observation"},
         upsert=True
     )
 
@@ -123,8 +124,11 @@ def crawlResourceForSubject(resourceName, subject, collection, key, value, name)
     for element in ret:
         element = resource.as_json(element)
         element["_id"] = str(ObjectId())
-        element["feature"] = value # Add this for later selection in aggregation
+
+        # Add this for later selection in aggregation
+        element["feature"] = value 
         element["name"] = name if name is not None else value
+        
         insert_list.append(element)
 
     mongodbConnection.get_db()[collection].insert(list(insert_list))

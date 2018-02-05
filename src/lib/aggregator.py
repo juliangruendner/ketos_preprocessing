@@ -5,101 +5,165 @@ from functools import reduce
 import logging
 logger = logging.getLogger(__name__)
 
-def aggregateFeatures(crawler_id, aggtype):
-    mongorequest = [
-        {"$unwind": "$observations"},
-        {"$group" : {"_id" : {"attribute": "$observations.attribute", "patient_id": "$_id"}, "entry": {"$push": "$$CURRENT.observations"}}},
-        {"$unwind": "$entry"},
-        {"$sort"  : {"entry.timestamp": 1}}
-    ]
 
-    if aggtype == None or aggtype.lower() == "all":
-        mongorequest += [
-            {"$group" : {"_id": "$_id", "observations": {"$push": "$entry"}}},
-            {"$group" : {"_id": "$_id.patient_id", "observations": { "$push": "$$CURRENT.observations"}}}
+class Aggregator():
+
+    def __init__(self, crawler_id, aggregation_type, feature_set):
+        self.crawler_id = crawler_id
+        self.aggregation_type = aggregation_type
+        self.feature_set = feature_set
+
+        self.aggregatedElements = []
+        
+    def aggregateObservations(self):
+        mongorequest = [
+            {"$unwind": "$observations"},
+            {"$group" : {"_id" : {"attribute": "$observations.attribute", "patient_id": "$_id"}, "entry": {"$push": "$$CURRENT.observations"}}},
+            {"$unwind": "$entry"},
+            {"$sort"  : {"entry.timestamp": 1}}
         ]
-    elif aggtype.lower() == "latest" or aggtype.lower() == "oldest":        
-        tmp = "first" if aggtype.lower() == "oldest" else "last"
-        mongorequest += [
-            {"$group" : {"_id": "$_id", "observations": {"$"+tmp: "$entry"}}},
-            {"$group" : {"_id": "$_id.patient_id", "observations": { "$push": "$$CURRENT.observations"}}}
+
+        if self.aggregation_type == "" or self.aggregation_type == "all":
+            mongorequest += [
+                {"$group" : {"_id": "$_id", "observations": {"$push": "$entry"}}},
+                {"$group" : {"_id": "$_id.patient_id", "observations": { "$push": "$$CURRENT.observations"}}}
+            ]
+        elif self.aggregation_type == "latest" or self.aggregation_type == "oldest":        
+            tmp = "first" if self.aggregation_type == "oldest" else "last"
+            mongorequest += [
+                {"$group" : {"_id": "$_id", "observations": {"$"+tmp: "$entry"}}},
+                {"$group" : {"_id": "$_id.patient_id", "observations": { "$push": "$$CURRENT.observations"}}}
+            ]
+        elif self.aggregation_type == "avg":
+            mongorequest += [
+                {"$group" : {"_id": "$_id" , "attribute": { "$first": "$_id.attribute" }, "observations": { "$avg": "$entry.value"}}},
+                {"$group" : {"_id": "$_id.patient_id", "observations": { "$push": {"avg": "$$CURRENT.observations", "attribute": "$_id.attribute"}}}}
+            ]
+        else:
+            return None
+
+        result = list(mongodbConnection.get_db()[self.crawler_id].aggregate(mongorequest))
+        for res in result:
+            res["resourceType"] = "Observation"
+        
+        self.aggregatedElements.extend(result)
+
+    def aggregateFeature(self, resource, selection, sortPaths):
+        mongorequest = [
+            {"$match": {"feature": selection, "resourceType": resource}}
         ]
-    elif aggtype.lower() == "avg":
-        mongorequest += [
-            {"$group" : {"_id": "$_id" , "attribute": { "$first": "$_id.attribute" }, "observations": { "$avg": "$entry.value"}}},
-            {"$group" : {"_id": "$_id.patient_id", "observations": { "$push": {"avg": "$$CURRENT.observations", "attribute": "$_id.attribute"}}}}
-        ]
-    else:
-        return None
 
-    result = mongodbConnection.get_db()[crawler_id].aggregate(mongorequest)
-    return list(result)
+        foundSearchPath = False
+        allElementsForFeature = list(mongodbConnection.get_db()[self.crawler_id].aggregate(mongorequest + [
+            {"$group": {"_id": None, "count": {"$sum": 1}}}
+        ]))
 
+        if len(allElementsForFeature) == 0:
+            raise ValueError("Feature " + selection + " of resource " + resource + " has no elements.")
 
-def writeFeaturesCSV(aggregated):
-    all_features = {}
-    for patient in aggregated:
-        for observation in patient["observations"]:
-                all_features[observation["attribute"]] = observation["meta"]["attribute"].lower()
+        numAllElementsForFeature = allElementsForFeature[0]["count"]
 
-    fieldnames = ["subject"]
-    for feature in all_features:
-        fieldnames.append(all_features[feature])
+        if sortPaths is not None:        
+            for sortPath in sortPaths:
+                mongoSortPath = ".".join(sortPath.split("/")) # Change "/" to "."
 
-    lines = []
-    for patient in aggregated:
-        row = {}
-        row["subject"] = patient["_id"]
-        for observation in patient["observations"]:
-            col_name = all_features[observation["attribute"]]
-            if isinstance(observation["value"], list):
-                for idx, val in enumerate(observation["value"]):
-                    tmp_col = col_name+"."+str(idx)
-                    row[tmp_col] = val     
-                    fieldnames.append(tmp_col) 
-            else:
-                row[col_name] = observation["value"]
-        lines.append(row)
+                elementsWithPath = list(mongodbConnection.get_db()[self.crawler_id].aggregate(mongorequest + [
+                    {"$match": {mongoSortPath: {"$exists": True }}},
+                    {"$group": {"_id": None, "count": {"$sum": 1}}}
+                ]))
 
-    output = io.StringIO()
-    writer = csv.DictWriter(output, fieldnames=set(fieldnames))
-    writer.writeheader()
+                if len(elementsWithPath) == 0:
+                    continue
 
-    for line in lines:
-        writer.writerow(line)
+                numElementsWithPath = elementsWithPath[0]["count"]
 
-    return output.getvalue()
+                # Check if every element has attribute search path
+                if numAllElementsForFeature == numElementsWithPath:
+                    mongorequest += [
+                        {"$sort": {mongoSortPath: 1}}
+                    ]
+                    foundSearchPath = True
+                    break
 
-def writeCSV(db_content, resourceMapping):
-    lines = []
+        if foundSearchPath:
+            sortedFeature = list(mongodbConnection.get_db()[self.crawler_id].aggregate(mongorequest))
+                    
+            if self.aggregation_type == "" or self.aggregation_type == "all":
+                self.aggregatedElements.extend(sortedFeature)
+            elif self.aggregation_type == "latest":
+                self.aggregatedElements.append(sortedFeature[-1])
+            elif self.aggregation_type == "oldest":
+                self.aggregatedElements.append(sortedFeature[0])
+        else:
+            raise ValueError("Elements have different fields to sort! Sorting not possible.")
 
-    # Map values of returned objects to new row names
-    for element in db_content:
-        line = {"patient": element["patient"]["reference"]}
-        for mapping in resourceMapping:
+    def getAggregated(self):
+        return self.aggregatedElements
 
-            try:
-                line[mapping["result_path"]] = reduce(dict.get, mapping["resource_path"].split("/")[1:], element) # "deep" getattr
+    def getCSVOfAggregated(self):
+        lines = [] # for csv: contains a row for every patient with respective columns
+        fieldnames = ["patient"]
+        
+        # Write .csv
+        for element in self.aggregatedElements:
+            addDict = {}
+            currentPatient = ""
+
+            if element["resourceType"] == "Observation":
+                currentPatient = element["_id"]
+
+                for observation in element["observations"]:
+                    col_name = observation["meta"]["attribute"]
+                    fieldnames.append(col_name)
+                    if isinstance(observation["value"], list):
+                        for idx, val in enumerate(observation["value"]):
+                            tmp_col = col_name+"."+str(idx)
+                            addDict[tmp_col] = val
+                            fieldnames.append(tmp_col) 
+                    else:
+                        addDict[col_name] = observation["value"]
                 
-                if not isinstance(line[mapping["result_path"]], (bool, str, int, float)):
-                    logger.error("Value of path " + mapping["resource_path"] + " is a non primitive type! Only use paths that lead to primitive types.")
+            else:
+                currentPatient = element["patient"]["reference"]
+                fieldnames.append(element["name"])
+                
+                resourceConfig = mongodbConnection.get_db().resourceConfig.find_one({"_id": element["resourceType"]})
+                value = reduce(dict.get, resourceConfig["resource_value_relative_path"].split("/"), element) # "deep" getattr
+                addDict[element["name"]] = value
 
-            except Exception as e:
-                logger.warn("Path " + mapping["resource_path"] + " does not exist in element with id " + element["id"] + ". None is inserted.")
-                line[mapping["result_path"]] = None
+            # Append value if line already exists in lines
+            didAddLine = False
+            for i, line in enumerate(lines):
+                if line["patient"] == currentPatient:
+                    lines[i] = {**line, **addDict}
+                    didAddLine = True
+            
+            if not didAddLine:
+                lines.append({"patient": currentPatient, **addDict})
+        
+        output = io.StringIO()
+        writer = csv.DictWriter(output, fieldnames=fieldnames)
+        writer.writeheader()
 
-        lines.append(line)
+        for line in lines:
+            writer.writerow(line)
+        
+        return output.getvalue()
 
-    # Write .csv
-    fieldnames = ["patient"]
-    for element in resourceMapping:
-        fieldnames.append(element["result_path"])
+    def aggregate(self):
+        isObservationAdded = False
 
-    output = io.StringIO()
-    writer = csv.DictWriter(output, fieldnames=fieldnames)
-    writer.writeheader()
+        for feature in self.feature_set:   
+            if feature["resource"] == "Observation":
+                if not isObservationAdded:
+                    self.aggregateObservations()
+                    isObservationAdded = True
+            else:
+                # TODO: read resource config from crawler_job, if provided
+                resourceConfig = mongodbConnection.get_db().resourceConfig.find_one({"_id": feature["resource"]})
 
-    for line in lines:
-        writer.writerow(line)
-
-    return output.getvalue()
+                try:
+                    self.aggregateFeature(feature["resource"], feature["value"], resourceConfig["sort_order"])
+                except ValueError:
+                    logger.warning("Elements of Feature " + feature["value"] + " from resource " + feature["resource"] + " could not be retrieved.")
+                    continue
