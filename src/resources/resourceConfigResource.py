@@ -15,10 +15,10 @@ logger = logging.getLogger(__name__)
 NO_RESOURCE_NAME_STR = "No resource name provided!"
 NO_RESOURCE_VALUE_PATH_STR = "No value path for resource provided!"
 
-def insert_resource_config(resource_name, resource_value_relative_path):
+def insert_resource_config(resource_name, resource_value_relative_path, sort_order):
     mongodbConnection.get_db().resourceConfig.find_one_and_delete({"_id" : resource_name})
     mongodbConnection.get_db().resourceConfig.insert_one(
-        {"_id": resource_name, "resource_value_relative_path" : resource_value_relative_path}
+        {"_id": resource_name, "resource_value_relative_path" : resource_value_relative_path, "sort_order": sort_order}
     )
 
     ret = mongodbConnection.get_db().resourceConfig.find_one({"_id" : resource_name})
@@ -31,6 +31,7 @@ def remove_resource_config(resource_name):
 
 parser = reqparse.RequestParser()
 parser.add_argument('resource_value_relative_path', type = str, required = True, help = NO_RESOURCE_VALUE_PATH_STR, location = 'json')
+parser.add_argument('sort_order', type = str, action = 'append', location = 'json')
 
 
 class ResourceConfigList(Resource):
@@ -47,8 +48,9 @@ class ResourceConfigList(Resource):
         args = self.resource_parser.parse_args()
         resource_name = args["resource_name"]
         resource_value_relative_path = args["resource_value_relative_path"]
+        sort_order = args["sort_order"]
 
-        return insert_resource_config(resource_name, resource_value_relative_path)
+        return insert_resource_config(resource_name, resource_value_relative_path, sort_order)
 
     def delete(self):
         args = self.resource_parser.parse_args()
@@ -68,8 +70,9 @@ class ResourceConfig(Resource):
     def post(self, resource_name):
         args = parser.parse_args()
         resource_value_relative_path = args["resource_value_relative_path"]
+        sort_order = args["sort_order"]
 
-        return insert_resource_config(resource_name, resource_value_relative_path)
+        return insert_resource_config(resource_name, resource_value_relative_path, sort_order)
 
     def delete(self, resource_name):
         remove_resource_config(resource_name)

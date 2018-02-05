@@ -17,7 +17,7 @@ settings = {
 }
 server = client.FHIRClient(settings=settings)
 
-def createCrawlerJob(crawler_id, crawler_status, patient_ids, feature_set, aggregation_type):
+def createCrawlerJob(crawler_id, crawler_status, patient_ids, feature_set, aggregation_type, resource_configs):
     from api import api
 
     if isinstance(patient_ids, str):
@@ -31,6 +31,7 @@ def createCrawlerJob(crawler_id, crawler_status, patient_ids, feature_set, aggre
         "_id": crawler_id,
         "patient_ids": patient_ids,
         "feature_set": feature_set,
+        "resource_configs": resource_configs,
         "status": crawler_status,
         "finished": [],
         "queued_time": str(datetime.now()),

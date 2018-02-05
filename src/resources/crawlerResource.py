@@ -30,12 +30,13 @@ def feature_set_validator(value):
     else:
         raise ValueError(json.dumps(v.errors))
 
-def resource_mapping_validator(value):
-    FEATURE_SET_SCHEMA = {
-        'resource_path': {'required': True, 'type': 'string'},
-        'result_path': {'required': True, 'type': 'string'}
+def resource_config_validator(value):
+    RESOURCE_CONFIG_SCHEMA = {
+        'resource_name': {'required': True, 'type': 'string'},
+        'resource_value_relative_path': {'required': True, 'type': 'string'},
+        'sort_order': {'type': 'list', 'schema': {'type': 'string'}}
     }
-    v = Validator(FEATURE_SET_SCHEMA)
+    v = Validator(RESOURCE_CONFIG_SCHEMA)
     if v.validate(value):
         return value
     else:
@@ -44,6 +45,7 @@ def resource_mapping_validator(value):
 parser = reqparse.RequestParser(bundle_errors=True)
 parser.add_argument('feature_set', type = feature_set_validator, action = 'append', required = True, location = 'json')
 parser.add_argument('aggregation_type', type = str, default="latest", location = 'json')
+parser.add_argument('resource_configs', type = resource_config_validator, action = 'append', location = 'json')
 
 
 class Crawler(Resource):
@@ -57,7 +59,8 @@ class Crawler(Resource):
     def post(self):
         args = self.crawler_parser.parse_args()
 
-        crawlerJob = crawler.createCrawlerJob(str(ObjectId()), "running", args["patient"], args["feature_set"], args["aggregation_type"])
+        logger.debug(args["resource_configs"])
+        crawlerJob = crawler.createCrawlerJob(str(ObjectId()), "running", args["patient"], args["feature_set"], args["aggregation_type"], args["resource_configs"])
         crawlerStatus = crawler.executeCrawlerJob(crawlerJob)
 
         return {"csv_url": crawlerJob["url"], "crawler_status": crawlerStatus}
@@ -68,7 +71,6 @@ class CrawlerJobs(Resource):
 
     def __init__(self):
         super(CrawlerJobs, self).__init__()
-    
     
     @swagger.doc({
         "description":'Get all Crawler Jobs.',
@@ -95,7 +97,7 @@ class CrawlerJobs(Resource):
     def post(self):
         args = self.crawler_parser.parse_args()
 
-        crawlerJob = crawler.createCrawlerJob(str(ObjectId()), "queued", args["patient_ids"], args["feature_set"], args["aggregation_type"])
+        crawlerJob = crawler.createCrawlerJob(str(ObjectId()), "queued", args["patient_ids"], args["feature_set"], args["aggregation_type"], args["resource_configs"])
 
         return {"id": crawlerJob["_id"]}
 

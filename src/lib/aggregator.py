@@ -8,13 +8,19 @@ logger = logging.getLogger(__name__)
 
 class Aggregator():
 
-    def __init__(self, crawler_id, aggregation_type, feature_set):
+    def __init__(self, crawler_id, aggregation_type, feature_set, resource_configs):
         self.crawler_id = crawler_id
         self.aggregation_type = aggregation_type
         self.feature_set = feature_set
+        self.resource_configs = resource_configs
 
         self.aggregatedElements = []
-        
+
+    def getResourceConfig(self, resource_name):
+        # If resource config was not provided in crawler job -> read config from mongo db
+        return next((c for c in self.resource_configs if c["resource_name"] == resource_name),
+            mongodbConnection.get_db().resourceConfig.find_one({"_id": resource_name}))
+                
     def aggregateObservations(self):
         mongorequest = [
             {"$unwind": "$observations"},
@@ -48,7 +54,9 @@ class Aggregator():
         
         self.aggregatedElements.extend(result)
 
-    def aggregateFeature(self, resource, selection, sortPaths):
+    def aggregateFeature(self, resource, selection):
+        resource_config = self.getResourceConfig(resource)
+               
         mongorequest = [
             {"$match": {"feature": selection, "resourceType": resource}}
         ]
@@ -63,8 +71,8 @@ class Aggregator():
 
         numAllElementsForFeature = allElementsForFeature[0]["count"]
 
-        if sortPaths is not None:        
-            for sortPath in sortPaths:
+        if resource_config["sort_order"] is not None:       
+            for sortPath in resource_config["sort_order"]:
                 mongoSortPath = ".".join(sortPath.split("/")) # Change "/" to "."
 
                 elementsWithPath = list(mongodbConnection.get_db()[self.crawler_id].aggregate(mongorequest + [
@@ -84,6 +92,8 @@ class Aggregator():
                     ]
                     foundSearchPath = True
                     break
+        else:
+            logger.warning("No sort order provided.")
 
         if foundSearchPath:
             sortedFeature = list(mongodbConnection.get_db()[self.crawler_id].aggregate(mongorequest))
@@ -127,9 +137,16 @@ class Aggregator():
                 currentPatient = element["patient"]["reference"]
                 fieldnames.append(element["name"])
                 
-                resourceConfig = mongodbConnection.get_db().resourceConfig.find_one({"_id": element["resourceType"]})
-                value = reduce(dict.get, resourceConfig["resource_value_relative_path"].split("/"), element) # "deep" getattr
-                addDict[element["name"]] = value
+                resource_config = self.getResourceConfig(element["resourceType"])
+                
+                cur = element
+                for path in resource_config["resource_value_relative_path"].split("/"):
+                    if isinstance(cur, dict):
+                        cur = cur[path]
+                    elif isinstance(cur, list):
+                        cur = cur[0][path]
+
+                addDict[element["name"]] = cur
 
             # Append value if line already exists in lines
             didAddLine = False
@@ -159,11 +176,8 @@ class Aggregator():
                     self.aggregateObservations()
                     isObservationAdded = True
             else:
-                # TODO: read resource config from crawler_job, if provided
-                resourceConfig = mongodbConnection.get_db().resourceConfig.find_one({"_id": feature["resource"]})
-
                 try:
-                    self.aggregateFeature(feature["resource"], feature["value"], resourceConfig["sort_order"])
+                    self.aggregateFeature(feature["resource"], feature["value"])
                 except ValueError:
                     logger.warning("Elements of Feature " + feature["value"] + " from resource " + feature["resource"] + " could not be retrieved.")
                     continue

@@ -36,7 +36,7 @@ class Aggregation(Resource):
         if aggregation_type.lower() == "all" and output_type == "csv":
             return "Time series not supported", 400
 
-        aggregator = Aggregator(crawler_id, aggregation_type.lower(), crawlerJob["feature_set"])
+        aggregator = Aggregator(crawler_id, aggregation_type.lower(), crawlerJob["feature_set"], crawlerJob["resource_configs"])
         aggregator.aggregate()
        
         if output_type == "csv":
