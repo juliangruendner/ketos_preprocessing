@@ -62,13 +62,14 @@ class ResourceConfigList(Resource):
 
 class ResourceConfig(Resource):
     def __init__(self):
+        self.resource_parser = parser.copy()
         super(ResourceConfig, self).__init__()
 
     def get(self, resource_name):
         return mongodbConnection.get_db().resourceConfig.find_one({"_id": resource_name})
 
     def post(self, resource_name):
-        args = parser.parse_args()
+        args = self.resource_parser.parse_args()
         resource_value_relative_path = args["resource_value_relative_path"]
         sort_order = args["sort_order"]
 
