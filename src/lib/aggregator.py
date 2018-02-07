@@ -12,7 +12,7 @@ class Aggregator():
         self.crawler_id = crawler_id
         self.aggregation_type = aggregation_type
         self.feature_set = feature_set
-        self.resource_configs = resource_configs
+        self.resource_configs = [] if resource_configs is None else resource_configs
 
         self.aggregatedElements = []
 
