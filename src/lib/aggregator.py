@@ -162,7 +162,7 @@ class Aggregator():
                 lines.append({"patient": currentPatient, **addDict})
         
         output = io.StringIO()
-        writer = csv.DictWriter(output, fieldnames=fieldnames)
+        writer = csv.DictWriter(output, fieldnames=list(set(fieldnames)))
         writer.writeheader()
 
         for line in lines:
