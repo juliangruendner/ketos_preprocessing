@@ -8,6 +8,7 @@ from jsonreducer.ObservationReducer import ObservationReducer
 from resources import aggregationResource
 from bson.objectid import ObjectId
 from datetime import datetime
+import traceback
 import logging
 logger = logging.getLogger(__name__)
 
@@ -59,6 +60,9 @@ def executeCrawlerJob(crawlerJob):
         return "success"
 
     except Exception as e:
+        print("-----------------")
+        traceback.print_exc()
+        print("-----------------")
         logger.error("Execution of Crawler " + crawlerJob["_id"] + " failed")
         mongodbConnection.get_db().crawlerJobs.update({"_id": crawlerJob["_id"]}, {"$set": {"status": "error", "end_time": str(datetime.now())}})
         return "error"
@@ -119,7 +123,8 @@ def crawlResourceForSubject(resourceName, subject, collection, key, value, name)
         raise
 
     if(len(ret) == 0):
-        logger.info("No values found for search " + serverSearchParams + " on resource " + resourceName)
+        logger.info("No values found for search for patient " + subject + " on resource " + resourceName)
+        return
 
     insert_list = []
     for element in ret:
