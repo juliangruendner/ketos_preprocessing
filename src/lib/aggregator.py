@@ -148,6 +148,9 @@ class Aggregator():
 
                 addDict[element["name"]] = cur
 
+            if "Patient/" not in currentPatient:
+                currentPatient = "Patient/" + currentPatient
+
             # Append value if line already exists in lines
             didAddLine = False
             for i, line in enumerate(lines):
