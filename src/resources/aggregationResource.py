@@ -41,6 +41,8 @@ class Aggregation(Resource):
        
         if output_type == "csv":
             return Response(aggregator.getCSVOfAggregated(), mimetype='text/csv')
+        elif output_type == "json":
+            return aggregator.getRestructured()
         else:
             return aggregator.getAggregated()
 

@@ -15,6 +15,7 @@ class Aggregator():
         self.resource_configs = [] if resource_configs is None else resource_configs
 
         self.aggregatedElements = []
+        self.restructuredElements = []
 
     def getResourceConfig(self, resource_name):
         # If resource config was not provided in crawler job -> read config from mongo db
@@ -106,15 +107,8 @@ class Aggregator():
                 self.aggregatedElements.append(sortedFeature[0])
         else:
             raise ValueError("Elements have different fields to sort! Sorting not possible.")
-
-    def getAggregated(self):
-        return self.aggregatedElements
-
-    def getCSVOfAggregated(self):
-        lines = [] # for csv: contains a row for every patient with respective columns
-        fieldnames = ["patient"]
-        
-        # Write .csv
+    
+    def restructureElements(self):
         for element in self.aggregatedElements:
             addDict = {}
             currentPatient = ""
@@ -124,18 +118,15 @@ class Aggregator():
 
                 for observation in element["observations"]:
                     col_name = observation["meta"]["attribute"]
-                    fieldnames.append(col_name)
                     if isinstance(observation["value"], list):
                         for idx, val in enumerate(observation["value"]):
                             tmp_col = col_name+"."+str(idx)
                             addDict[tmp_col] = val
-                            fieldnames.append(tmp_col) 
                     else:
                         addDict[col_name] = observation["value"]
                 
             else:
                 currentPatient = element["patient"]["reference"]
-                fieldnames.append(element["name"])
                 
                 resource_config = self.getResourceConfig(element["resourceType"])
                 
@@ -148,24 +139,45 @@ class Aggregator():
 
                 addDict[element["name"]] = cur
 
-            if "Patient/" not in currentPatient:
-                currentPatient = "Patient/" + currentPatient
+            if "Patient/" in currentPatient:
+                currentPatient = currentPatient.replace("Patient/", "")
 
             # Append value if line already exists in lines
             didAddLine = False
-            for i, line in enumerate(lines):
+            for i, line in enumerate(self.restructuredElements):
                 if line["patient"] == currentPatient:
-                    lines[i] = {**line, **addDict}
+                    self.restructuredElements[i] = {**line, **addDict}
                     didAddLine = True
             
             if not didAddLine:
-                lines.append({"patient": currentPatient, **addDict})
+                self.restructuredElements.append({"patient": currentPatient, **addDict})
+
+
+    def getAggregated(self):
+        return self.aggregatedElements
+    
+    def getRestructured(self):
+        ret = []
+        for element in self.restructuredElements:
+            insert = {"patient_id": element["patient"], "entries": []}
+            for key, value in element.items():
+                if key != "patient":
+                    insert["entries"].append({key: value})
+            ret.append(insert)
+
+        return ret
+
+    def getCSVOfAggregated(self):
+        fieldnames = ["patient"]
+
+        for element in self.restructuredElements:
+            fieldnames.extend(element.keys())
         
         output = io.StringIO()
         writer = csv.DictWriter(output, fieldnames=list(set(fieldnames)))
         writer.writeheader()
 
-        for line in lines:
+        for line in self.restructuredElements:
             writer.writerow(line)
         
         return output.getvalue()
@@ -184,3 +196,5 @@ class Aggregator():
                 except ValueError:
                     logger.warning("Elements of Feature " + feature["value"] + " from resource " + feature["resource"] + " could not be retrieved.")
                     continue
+
+        self.restructureElements()
