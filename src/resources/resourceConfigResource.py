@@ -18,7 +18,7 @@ NO_RESOURCE_VALUE_PATH_STR = "No value path for resource provided!"
 def insert_resource_config(resource_name, resource_value_relative_path, sort_order):
     mongodbConnection.get_db().resourceConfig.find_one_and_delete({"_id" : resource_name})
     mongodbConnection.get_db().resourceConfig.insert_one(
-        {"_id": resource_name, "resource_value_relative_path" : resource_value_relative_path, "sort_order": sort_order}
+        {"_id": resource_name, "resource_value_relative_path" : resource_value_relative_path, "sort_order": sort_order, "resource_name": resource_name}
     )
 
     ret = mongodbConnection.get_db().resourceConfig.find_one({"_id" : resource_name})
@@ -32,51 +32,63 @@ def remove_resource_config(resource_name):
 parser = reqparse.RequestParser()
 parser.add_argument('resource_value_relative_path', type = str, required = True, help = NO_RESOURCE_VALUE_PATH_STR, location = 'json')
 parser.add_argument('sort_order', type = str, action = 'append', location = 'json')
+parser.add_argument('resource_name', type = str, required = True, help = NO_RESOURCE_NAME_STR, location = 'json')
 
-
-class ResourceConfigList(Resource):
-    def __init__(self):
-        self.resource_parser = parser.copy()
-        self.resource_parser.add_argument('resource_name', type = str, required = True, help = NO_RESOURCE_NAME_STR, location = 'json')
-
-        super(ResourceConfigList, self).__init__()
-    
-    def get(self):
-        return list(mongodbConnection.get_db().resourceConfig.find())
-
-    def post(self):
-        args = self.resource_parser.parse_args()
-        resource_name = args["resource_name"]
-        resource_value_relative_path = args["resource_value_relative_path"]
-        sort_order = args["sort_order"]
-
-        return insert_resource_config(resource_name, resource_value_relative_path, sort_order)
-
-    def delete(self):
-        args = self.resource_parser.parse_args()
-        resource_name = args["resource_name"]
-
-        remove_resource_config(resource_name)
-
-        return {"resource_name": resource_name} , 200
 
 class ResourceConfig(Resource):
     def __init__(self):
-        self.resource_parser = parser.copy()
         super(ResourceConfig, self).__init__()
+    
+    @swagger.doc({
+        "description": "Get all configured Resources.",
+        "tags": ["resources"],
+        "responses": {
+            "200": {
+                "description": "Retrieved a json with a all configured Resources."
+            }
+        }
+    })
+    def get(self):
+        return list(mongodbConnection.get_db().resourceConfig.find())
 
-    def get(self, resource_name):
-        return mongodbConnection.get_db().resourceConfig.find_one({"_id": resource_name})
-
-    def post(self, resource_name):
-        args = self.resource_parser.parse_args()
+    @swagger.doc({
+        "description": "Insert/Update a Resource Config.",
+        "tags": ["resources"],
+        "reqparser": {
+            "name": "resource config list parser",
+            "parser": parser
+        },
+        "responses": {
+            "200": {
+                "description": "Retrieved a json with the inserted/updated Resource."
+            }
+        }
+    })
+    def post(self):
+        args = parser.parse_args()
+        resource_name = args["resource_name"]
         resource_value_relative_path = args["resource_value_relative_path"]
         sort_order = args["sort_order"]
 
         return insert_resource_config(resource_name, resource_value_relative_path, sort_order)
 
-    def delete(self, resource_name):
+    @swagger.doc({
+        "description": "Remove a Resource Config.",
+        "tags": ["resources"],
+        "reqparser": {
+            "name": "resource config list parser",
+            "parser": parser
+        },
+        "responses": {
+            "200": {
+                "description": "Retrieved a json with the name of the removed Resource."
+            }
+        }
+    })
+    def delete(self):
+        args = parser.parse_args()
+        resource_name = args["resource_name"]
+
         remove_resource_config(resource_name)
 
         return {"resource_name": resource_name}, 200
-
