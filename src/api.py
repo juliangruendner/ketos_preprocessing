@@ -13,7 +13,6 @@ from flask_cors import CORS
 from lib import crawlerTask, resourceLoader
 from resources.crawlerResource import Crawler, CrawlerJob, CrawlerJobs 
 from resources.aggregationResource import Aggregation
-from resources.swaggerResource import Swagger
 from resources.resourceConfigResource import ResourceConfig, ResourceConfigList
 import configuration
 import os
@@ -23,7 +22,6 @@ app = Flask(__name__)
 CORS(app) # this will allow cross-origin requests; needed for http://petstore.swagger.io in swaggerResource to access whole api output
 api = Api(app, add_api_spec_resource=True, api_version='0.0', api_spec_url='/api/swagger') # Wrap the Api and add /api/swagger endpoint
 
-api.add_resource(Swagger, '/swagger', endpoint='swaggerhtml')
 api.add_resource(Crawler, '/crawler', endpoint='crawler')
 api.add_resource(CrawlerJobs, '/crawler/jobs', endpoint='jobs')
 api.add_resource(CrawlerJob, '/crawler/jobs/<crawler_id>', endpoint='job')
