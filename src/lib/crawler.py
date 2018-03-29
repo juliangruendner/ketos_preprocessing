@@ -28,7 +28,6 @@ def createCrawlerJob(crawler_id, crawler_status, patient_ids, feature_set, aggre
     url_params = {"output_type": "csv", "aggregation_type": aggregation_type}
     url = "http://"+configuration.HOSTEXTERN+":"+str(configuration.WSPORT)+api.url_for(aggregationResource.Aggregation, crawler_id=crawler_id)+ "?" + urllib.parse.urlencode(url_params)
 
-    # TODO: add resource configurations as fields that overwrite default, e.g. "Condition": {...}
     crawlerJob =  {
         "_id": crawler_id,
         "patient_ids": patient_ids,
@@ -62,7 +61,7 @@ def executeCrawlerJob(crawlerJob):
         logger.info("Finished Crawler Job " + crawlerJob["_id"])
         return "success"
 
-    except Exception as e:
+    except Exception:
         logger.error("Execution of Crawler " + crawlerJob["_id"] + " failed", exc_info=1)
         mongodbConnection.get_db().crawlerJobs.update({"_id": crawlerJob["_id"]}, {"$set": {"status": "error", "end_time": str(datetime.now())}})
         return "error"
@@ -109,7 +108,7 @@ def crawlResourceForSubject(resourceName, subject, collection, key, value, name)
     # Dynamically load module for resource
     try:
         resource = getattr(importlib.import_module("fhirclient.models." + resourceName.lower()), resourceName)
-    except Exception as e:
+    except Exception:
         logger.error("Resource " + resourceName + " does not exist", exc_info=1)
         raise
 
@@ -118,7 +117,7 @@ def crawlResourceForSubject(resourceName, subject, collection, key, value, name)
         serverSearchParams = {"patient": subject, key: value}
         search = resource.where(serverSearchParams)
         ret = search.perform_resources(server.server)
-    except Exception as e:
+    except Exception:
         logger.error("Search failed", exc_info=1)
         raise
 
