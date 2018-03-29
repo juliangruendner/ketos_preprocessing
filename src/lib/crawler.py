@@ -12,6 +12,7 @@ import traceback
 import logging
 logger = logging.getLogger(__name__)
 
+
 settings = {
     'app_id': 'ketos_data',
     'api_base': configuration.HAPIFHIR_URL,
@@ -57,13 +58,12 @@ def executeCrawlerJob(crawlerJob):
             mongodbConnection.get_db().crawlerJobs.update({"_id": crawlerJob["_id"]}, {"$push": {"finished": subject}})
 
         mongodbConnection.get_db().crawlerJobs.update({"_id": crawlerJob["_id"]}, {"$set": {"status": "finished", "end_time": str(datetime.now())}})
+
+        logger.info("Finished Crawler Job " + crawlerJob["_id"])
         return "success"
 
     except Exception as e:
-        print("-----------------")
-        traceback.print_exc()
-        print("-----------------")
-        logger.error("Execution of Crawler " + crawlerJob["_id"] + " failed")
+        logger.error("Execution of Crawler " + crawlerJob["_id"] + " failed", exc_info=1)
         mongodbConnection.get_db().crawlerJobs.update({"_id": crawlerJob["_id"]}, {"$set": {"status": "error", "end_time": str(datetime.now())}})
         return "error"
 
@@ -134,6 +134,7 @@ def crawlResourceForSubject(resourceName, subject, collection, key, value, name)
         # Add this for later selection in aggregation
         element["feature"] = value 
         element["name"] = name if name is not None else value
+        element["patient_id"] = subject
         
         insert_list.append(element)
 
