@@ -50,12 +50,18 @@ class Aggregation(Resource):
                 "name": "output_type",
                 "in": "query",
                 "type": "string",
-                "description": OUTPUT_TYPE_STR,
+                "description": OUTPUT_TYPE_STR
             }
         ],
         "responses": {
             "200": {
-                "description": "Retrieved a json with the inserted/updated Resource."
+                "description": "Retrieved requested data as specified type."
+            },
+            "400": {
+                "description": "Unsupported aggregation type or you requested yet unsupported time series data."
+            },
+            "404": {
+                "description": "Crawler did not yet finish yet."
             }
         }
     })
