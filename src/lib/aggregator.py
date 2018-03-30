@@ -17,11 +17,15 @@ class Aggregator():
         self.aggregatedElements = []
         self.restructuredElements = []
 
+    def getAggregated(self):
+        return self.aggregatedElements
+
     def getResourceConfig(self, resource_name):
         # If resource config was not provided in crawler job -> read config from mongo db
         return next((c for c in self.resource_configs if c["resource_name"] == resource_name),
             mongodbConnection.get_db().resourceConfig.find_one({"_id": resource_name}))
-                
+
+### Aggregation of crawled data ###
     def aggregateObservations(self):
         mongorequest = [
             {"$unwind": "$observations"},
@@ -72,7 +76,8 @@ class Aggregator():
 
         numAllElementsForFeature = allElementsForFeature[0]["count"]
 
-        if resource_config["sort_order"] is not None:       
+        if resource_config["sort_order"] is not None:
+        # Before actually sorting check if every single element has the attribute that should be sorted after -> throw error if they do not
             for sortPath in resource_config["sort_order"]:
                 mongoSortPath = ".".join(sortPath.split("/")) # Change "/" to "."
 
@@ -95,6 +100,7 @@ class Aggregator():
                     break
         else:
             logger.warning("No sort order provided.")
+            foundSearchPath = True
 
         if foundSearchPath:
             sortedFeature = list(mongodbConnection.get_db()[self.crawler_id].aggregate(mongorequest))
@@ -107,7 +113,7 @@ class Aggregator():
                 self.aggregatedElements.append(sortedFeature[0])
         else:
             raise ValueError("Elements have different fields to sort! Sorting not possible.")
-    
+
     def restructureElements(self):
         for element in self.aggregatedElements:
             addDict = {}
@@ -152,10 +158,6 @@ class Aggregator():
             if not didAddLine:
                 self.restructuredElements.append({"patient": currentPatient, **addDict})
 
-
-    def getAggregated(self):
-        return self.aggregatedElements
-    
     def getRestructured(self):
         ret = []
         for element in self.restructuredElements:
