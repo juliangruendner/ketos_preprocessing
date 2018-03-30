@@ -98,8 +98,7 @@ class ResourceConfig(Resource):
         "responses": {
             "200": {
                 "description": "Retrieved a json with the inserted/updated Resource.",
-                "schema": swagger_params[0]["schema"],
-                "examples": swagger_example
+                "schema": swagger_params[0]["schema"]
             }
         }
     })
@@ -118,8 +117,7 @@ class ResourceConfig(Resource):
         "responses": {
             "200": {
                 "description": "Retrieved a json with the name of the removed Resource.",
-                "schema": swagger_params[0]["schema"],
-                "examples": swagger_example
+                "schema": swagger_params[0]["schema"]
             }
         }
     })
