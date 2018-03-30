@@ -199,4 +199,5 @@ class Aggregator():
                     logger.warning("Elements of Feature " + feature["value"] + " from resource " + feature["resource"] + " could not be retrieved.")
                     continue
 
-        self.restructureElements()
+        if self.aggregation_type == "latest" or self.aggregation_type == "oldest":
+            self.restructureElements()
