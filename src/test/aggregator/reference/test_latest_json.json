@@ -1,0 +1,36 @@
+[
+    {
+      "patient_id":"146",
+      "entries":[
+        {
+          "Human body structure":null
+        },
+        {
+          "Abnormal weight in relation to growth / age standard":null
+        },
+        {
+          "Abnormal height in relation to growth / age standard":null
+        }
+      ]
+    },
+    {
+      "patient_id":"145",
+      "entries":[
+        {
+          "Abnormal weight in relation to growth / age standard":null
+        },
+        {
+          "Human body structure":null
+        },
+        {
+          "Abnormal height in relation to growth / age standard":null
+        },
+        {
+          "Acute renal failure syndrome":"finding"
+        },
+        {
+          "Abdominal Pain":"finding"
+        }
+      ]
+    }
+  ]

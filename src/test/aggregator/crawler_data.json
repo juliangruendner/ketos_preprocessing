@@ -1,0 +1,387 @@
+[
+  {
+    "_id": "5abcdb0e7d3634001c639693",
+    "id": "438574",
+    "asserter": {
+      "reference": "Practitioner/32772"
+    },
+    "category": {
+      "coding": [
+        {
+          "code": "finding",
+          "system": "http://hl7.org/fhir/condition-category"
+        }
+      ]
+    },
+    "code": {
+      "coding": [
+        {
+          "code": "14669001",
+          "display": "Acute renal failure syndrome",
+          "system": "http://snomed.info/sct"
+        }
+      ],
+      "text": "Acute renal failure syndrome, Systematic Nomenclature of Medicine - Clinical Terms (IHTSDO), 14669001"
+    },
+    "encounter": {
+      "reference": "Encounter/63353"
+    },
+    "onsetPeriod": {
+      "end": "2008-10-29T00:00:00+00:00",
+      "start": "2008-10-22T00:00:00+00:00"
+    },
+    "patient": {
+      "reference": "Patient/145"
+    },
+    "verificationStatus": "confirmed",
+    "resourceType": "Condition",
+    "feature": "14669001",
+    "name": "Acute renal failure syndrome",
+    "patient_id": "Patient/145"
+  },
+  {
+    "_id": "5abcdb0e7d3634001c639694",
+    "id": "441454",
+    "asserter": {
+      "reference": "Practitioner/32772"
+    },
+    "category": {
+      "coding": [
+        {
+          "code": "finding",
+          "system": "http://hl7.org/fhir/condition-category"
+        }
+      ]
+    },
+    "code": {
+      "coding": [
+        {
+          "code": "14669001",
+          "display": "Acute renal failure syndrome",
+          "system": "http://snomed.info/sct"
+        }
+      ],
+      "text": "Acute renal failure syndrome, Systematic Nomenclature of Medicine - Clinical Terms (IHTSDO), 14669001"
+    },
+    "encounter": {
+      "reference": "Encounter/63353"
+    },
+    "onsetPeriod": {
+      "end": "2008-10-29T00:00:00+00:00",
+      "start": "2008-10-22T00:00:00+00:00"
+    },
+    "patient": {
+      "reference": "Patient/145"
+    },
+    "verificationStatus": "confirmed",
+    "resourceType": "Condition",
+    "feature": "14669001",
+    "name": "Acute renal failure syndrome",
+    "patient_id": "Patient/145"
+  },
+  {
+    "_id": "5abcdb0e7d3634001c639695",
+    "id": "449614",
+    "asserter": {
+      "reference": "Practitioner/32772"
+    },
+    "category": {
+      "coding": [
+        {
+          "code": "finding",
+          "system": "http://hl7.org/fhir/condition-category"
+        }
+      ]
+    },
+    "code": {
+      "coding": [
+        {
+          "code": "14669001",
+          "display": "Acute renal failure syndrome",
+          "system": "http://snomed.info/sct"
+        }
+      ],
+      "text": "Acute renal failure syndrome, Systematic Nomenclature of Medicine - Clinical Terms (IHTSDO), 14669001"
+    },
+    "encounter": {
+      "reference": "Encounter/63353"
+    },
+    "onsetPeriod": {
+      "end": "2008-10-29T00:00:00+00:00",
+      "start": "2008-10-22T00:00:00+00:00"
+    },
+    "patient": {
+      "reference": "Patient/145"
+    },
+    "verificationStatus": "confirmed",
+    "resourceType": "Condition",
+    "feature": "14669001",
+    "name": "Acute renal failure syndrome",
+    "patient_id": "Patient/145"
+  },
+  {
+    "_id": "5abcdb0e7d3634001c639696",
+    "id": "459934",
+    "asserter": {
+      "reference": "Practitioner/32772"
+    },
+    "category": {
+      "coding": [
+        {
+          "code": "finding",
+          "system": "http://hl7.org/fhir/condition-category"
+        }
+      ]
+    },
+    "code": {
+      "coding": [
+        {
+          "code": "14669001",
+          "display": "Acute renal failure syndrome",
+          "system": "http://snomed.info/sct"
+        }
+      ],
+      "text": "Acute renal failure syndrome, Systematic Nomenclature of Medicine - Clinical Terms (IHTSDO), 14669001"
+    },
+    "encounter": {
+      "reference": "Encounter/63353"
+    },
+    "onsetPeriod": {
+      "end": "2008-10-29T00:00:00+00:00",
+      "start": "2008-10-22T00:00:00+00:00"
+    },
+    "patient": {
+      "reference": "Patient/145"
+    },
+    "verificationStatus": "confirmed",
+    "resourceType": "Condition",
+    "feature": "14669001",
+    "name": "Acute renal failure syndrome",
+    "patient_id": "Patient/145"
+  },
+  {
+    "_id": "5abcdb0e7d3634001c639697",
+    "id": "468334",
+    "asserter": {
+      "reference": "Practitioner/32772"
+    },
+    "category": {
+      "coding": [
+        {
+          "code": "finding",
+          "system": "http://hl7.org/fhir/condition-category"
+        }
+      ]
+    },
+    "code": {
+      "coding": [
+        {
+          "code": "14669001",
+          "display": "Acute renal failure syndrome",
+          "system": "http://snomed.info/sct"
+        }
+      ],
+      "text": "Acute renal failure syndrome, Systematic Nomenclature of Medicine - Clinical Terms (IHTSDO), 14669001"
+    },
+    "encounter": {
+      "reference": "Encounter/63353"
+    },
+    "onsetPeriod": {
+      "end": "2008-10-29T00:00:00+00:00",
+      "start": "2008-10-22T00:00:00+00:00"
+    },
+    "patient": {
+      "reference": "Patient/145"
+    },
+    "verificationStatus": "confirmed",
+    "resourceType": "Condition",
+    "feature": "14669001",
+    "name": "Acute renal failure syndrome",
+    "patient_id": "Patient/145"
+  },
+  {
+    "_id": "5abcdb0e7d3634001c639698",
+    "id": "622114",
+    "category": {
+      "coding": [
+        {
+          "code": "finding",
+          "system": "http://hl7.org/fhir/condition-category"
+        }
+      ]
+    },
+    "code": {
+      "coding": [
+        {
+          "code": "14669001",
+          "display": "Acute renal failure syndrome",
+          "system": "http://snomed.info/sct"
+        }
+      ],
+      "text": "Acute renal failure syndrome, Systematic Nomenclature of Medicine - Clinical Terms (IHTSDO), 14669001"
+    },
+    "encounter": {
+      "reference": "Encounter/63353"
+    },
+    "onsetPeriod": {
+      "end": "2008-10-29T00:00:00+00:00",
+      "start": "2008-10-22T00:00:00+00:00"
+    },
+    "patient": {
+      "reference": "Patient/145"
+    },
+    "verificationStatus": "confirmed",
+    "resourceType": "Condition",
+    "feature": "14669001",
+    "name": "Acute renal failure syndrome",
+    "patient_id": "Patient/145"
+  },
+  {
+    "_id": "5abcdb0f7d3634001c639699",
+    "id": "138544",
+    "asserter": {
+      "reference": "Practitioner/3219"
+    },
+    "category": {
+      "coding": [
+        {
+          "code": "finding",
+          "system": "http://hl7.org/fhir/condition-category"
+        }
+      ]
+    },
+    "code": {
+      "coding": [
+        {
+          "code": "21522001",
+          "display": "Abdominal pain",
+          "system": "http://snomed.info/sct"
+        }
+      ],
+      "text": "Abdominal pain, Systematic Nomenclature of Medicine - Clinical Terms (IHTSDO), 21522001"
+    },
+    "encounter": {
+      "reference": "Encounter/111195"
+    },
+    "onsetPeriod": {
+      "end": "2009-10-03T00:00:00+00:00",
+      "start": "2009-10-03T00:00:00+00:00"
+    },
+    "patient": {
+      "reference": "Patient/145"
+    },
+    "verificationStatus": "confirmed",
+    "resourceType": "Condition",
+    "feature": "21522001",
+    "name": "Abdominal Pain",
+    "patient_id": "Patient/145"
+  },
+  {
+    "_id": "5abcdb0f7d3634001c63969a",
+    "id": "120964",
+    "category": {
+      "coding": [
+        {
+          "code": "finding",
+          "system": "http://hl7.org/fhir/condition-category"
+        }
+      ]
+    },
+    "code": {
+      "coding": [
+        {
+          "code": "21522001",
+          "display": "Abdominal pain",
+          "system": "http://snomed.info/sct"
+        }
+      ],
+      "text": "Abdominal pain, Systematic Nomenclature of Medicine - Clinical Terms (IHTSDO), 21522001"
+    },
+    "encounter": {
+      "reference": "Encounter/112092"
+    },
+    "onsetPeriod": {
+      "end": "2010-03-27T00:00:00+00:00",
+      "start": "2010-03-27T00:00:00+00:00"
+    },
+    "patient": {
+      "reference": "Patient/145"
+    },
+    "verificationStatus": "confirmed",
+    "resourceType": "Condition",
+    "feature": "21522001",
+    "name": "Abdominal Pain",
+    "patient_id": "Patient/145"
+  },
+  {
+    "_id": "Patient/145",
+    "observations": [
+      {
+        "entity": "145",
+        "attribute": "279495008",
+        "meta": {
+          "attribute": "Human body structure",
+          "type": null
+        },
+        "timestamp": "2017-11-28T00:00:00+00:00",
+        "value": null
+      },
+      {
+        "entity": "145",
+        "attribute": "422503008",
+        "meta": {
+          "attribute": "Abnormal weight in relation to growth / age standard",
+          "type": null
+        },
+        "timestamp": "2017-11-28T00:00:00+00:00",
+        "value": null
+      },
+      {
+        "entity": "145",
+        "attribute": "425115008",
+        "meta": {
+          "attribute": "Abnormal height in relation to growth / age standard",
+          "type": null
+        },
+        "timestamp": "2017-11-28T00:00:00+00:00",
+        "value": null
+      }
+    ]
+  },
+  {
+    "_id": "Patient/146",
+    "observations": [
+      {
+        "entity": "146",
+        "attribute": "279495008",
+        "meta": {
+          "attribute": "Human body structure",
+          "type": null
+        },
+        "timestamp": "2017-11-28T00:00:00+00:00",
+        "value": null
+      },
+      {
+        "entity": "146",
+        "attribute": "422503008",
+        "meta": {
+          "attribute": "Abnormal weight in relation to growth / age standard",
+          "type": null
+        },
+        "timestamp": "2017-11-28T00:00:00+00:00",
+        "value": null
+      },
+      {
+        "entity": "146",
+        "attribute": "425115008",
+        "meta": {
+          "attribute": "Abnormal height in relation to growth / age standard",
+          "type": null
+        },
+        "timestamp": "2017-11-28T00:00:00+00:00",
+        "value": null
+      }
+    ]
+  }
+]
+  

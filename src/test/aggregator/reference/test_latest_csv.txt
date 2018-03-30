@@ -1,0 +1,3 @@
+Abdominal Pain,Abnormal height in relation to growth / age standard,Abnormal weight in relation to growth / age standard,Acute renal failure syndrome,Human body structure,patient
+,,,,,146
+finding,,,finding,,145

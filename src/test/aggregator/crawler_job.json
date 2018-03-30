@@ -1,0 +1,41 @@
+{
+    "feature_set": [
+      {
+        "resource": "Observation",
+        "key": "code",
+        "value": "279495008"
+      },
+      {
+        "resource": "Observation",
+        "key": "code",
+        "value": "422503008"
+      },
+      {
+        "resource": "Observation",
+        "key": "code",
+        "value": "425115008"
+      },
+      {
+        "resource": "Condition",
+        "key": "code",
+        "value": "14669001",
+        "name": "Acute renal failure syndrome"
+      },
+      {
+        "resource": "Condition",
+        "key": "code",
+        "value": "21522001",
+        "name": "Abdominal Pain"
+      }
+    ],
+    "resource_configs": [
+      {
+        "resource_name": "Condition",
+        "resource_value_relative_path": "category/coding/code",
+        "sort_order": [
+          "onsetDateTime",
+          "onsetPeriod/end"
+        ]
+      }
+    ]
+  }
