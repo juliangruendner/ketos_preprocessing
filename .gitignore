@@ -1,5 +1,9 @@
 # Created by https://www.gitignore.io/api/macos,python,visualstudiocode
 
+# Ignore generated test files
+
+src/test/*/generated
+
 ### macOS ###
 *.DS_Store
 .AppleDouble
