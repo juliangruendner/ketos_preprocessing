@@ -176,7 +176,7 @@ class Aggregator():
             fieldnames.extend(element.keys())
         
         output = io.StringIO()
-        writer = csv.DictWriter(output, fieldnames=list(set(fieldnames)))
+        writer = csv.DictWriter(output, fieldnames=sorted(list(set(fieldnames))))
         writer.writeheader()
 
         for line in self.restructuredElements:
