@@ -1,14 +1,13 @@
 # Data Preprocessing Service
 
-This repo contains a WebService and a MongoDB for retrieving patient cohorts
+This repo contains a WebService and a MongoDB for retrieving patient cohorts data
 
 ## Getting Started
 
-* To start containers use `docker-compose up --build -d`
-* To stop containers use `docker-compose stop`
+* Make sure that a MongoDB is running on port configured port (default 27017)
+* Start WebService locally with `cd src && python3 api.py`: will be accessible on localhost:5000 (default)
+* View Documentation with Swagger Viewer from URL: `/api/swagger.json`
 
-## MongoDB 
+## Starting Tests
 
-### Configuration
-
-* Ports - Uses default ports 27017 (process) and 28017 (http)
+* `cd src && ./startTests.sh`
