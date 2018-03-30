@@ -3,7 +3,7 @@ from flask_restful_swagger_2 import swagger, Resource
 from resources import aggregationResource
 import configuration
 from flask import request
-from lib import mongodbConnection, crawler, util
+from lib import mongodbConnection, crawler
 from bson.objectid import ObjectId
 from bson import json_util
 from datetime import datetime
@@ -24,18 +24,20 @@ FEATURE_SET_SCHEMA = {
     'name': {'type': 'string'}                          # Human readable name of the value and to be column name of table, e.g. "Abdominal Pain"
 }
 
+RESOURCE_CONFIG_SCHEMA = {
+    'resource_name': {'required': True, 'type': 'string'},                  # Name of resource, e.g. "Condition"
+    'resource_value_relative_path': {'required': True, 'type': 'string'},   # Path to look for actual value of a resource, e.g. "category/coding/code"
+    'sort_order': {'type': 'list', 'schema': {'type': 'string'}}            # Order to sort retrieved values after, necessary for sorting for newest value
+}
+
+from swagger_resources import crawlerResourceSwagger
+
 def feature_set_validator(value):
     v = Validator(FEATURE_SET_SCHEMA)
     if v.validate(value):
         return value
     else:
         raise ValueError(json.dumps(v.errors))
-
-RESOURCE_CONFIG_SCHEMA = {
-    'resource_name': {'required': True, 'type': 'string'},                  # Name of resource, e.g. "Condition"
-    'resource_value_relative_path': {'required': True, 'type': 'string'},   # Path to look for actual value of a resource, e.g. "category/coding/code"
-    'sort_order': {'type': 'list', 'schema': {'type': 'string'}}            # Order to sort retrieved values after, necessary for sorting for newest value
-}
 
 def resource_config_validator(value):
     v = Validator(RESOURCE_CONFIG_SCHEMA)
@@ -49,146 +51,6 @@ parser.add_argument('feature_set', type = feature_set_validator, action = 'appen
 parser.add_argument('aggregation_type', type = str, default="latest", location = 'json')
 parser.add_argument('resource_configs', type = resource_config_validator, action = 'append', location = 'json')
 
-swagger_feature_set_example = [
-    {
-        "resource": "Observation",
-        "key": "code",
-        "value": "279495008"
-    },
-    {
-        "resource": "Observation",
-        "key": "code",
-        "value": "422503008"
-    },
-    {
-        "resource": "Observation",
-        "key": "code",
-        "value": "425115008"
-    },
-    {
-        "resource": "Condition",
-        "key": "code",
-        "value": "14669001",
-        "name": "Acute renal failure syndrome"
-    },
-    {
-        "resource": "Condition",
-        "key": "code",
-        "value": "21522001",
-        "name": "Abdominal Pain"
-    }
-]
-
-swagger_example = {
-	"feature_set": swagger_feature_set_example,
-	"resource_configs": { # TODO share with resourceConfigResource
-	    "resource_name": "Condition",
-	    "resource_value_relative_path": "category/coding/code",
-	    "sort_order": [
-	        "onsetDateTime",
-	        "onsetPeriod/end"
-    	]
-	}
-}
-
-swagger_example_patient = copy.deepcopy(swagger_example)
-swagger_example_patient["patient"] = "Patient/145"
-
-swagger_example_patients = copy.deepcopy(swagger_example)
-swagger_example_patients["patient_ids"] = ["Patient/145", "Patient/146"]
-
-swagger_params = [{
-    "name": "body",
-    "in": "body",
-    "required": True,
-    "schema": {
-        "type": "object",
-        "properties": {
-            "feature_set": util.buildSwaggerFrom(FEATURE_SET_SCHEMA),
-            "aggregation_type": {
-                "type": "string",
-                "required": True,
-                "default": "latest"
-            },
-            "resource_configs": util.buildSwaggerFrom(RESOURCE_CONFIG_SCHEMA),
-
-        }
-    }
-}]
-
-swagger_params_patient = copy.deepcopy(swagger_params)
-swagger_params_patient[0]["schema"]["example"] = swagger_example_patient
-swagger_params_patient[0]["schema"]["properties"]["patient"] = {
-    "patient": {
-        "type": "string",
-        "required": True
-    }
-}
-
-swagger_params_patients = copy.deepcopy(swagger_params)
-swagger_params_patients[0]["schema"]["example"] = swagger_example_patients
-swagger_params_patients[0]["schema"]["properties"]["patient_ids"] = {
-    "patient_ids": {
-        "type": "array",
-        "required": True,
-        "items": {
-            "type": "string"
-        }
-    }
-}
-
-swagger_crawler_example = {
-    "_id": "ID",
-    "patient_ids": ["ID1", "ID2"],
-    "feature_set": swagger_feature_set_example,
-    "resource_configs": { # TODO share with resourceConfigResource
-	    "resource_name": "Condition",
-	    "resource_value_relative_path": "category/coding/code",
-	    "sort_order": [
-	        "onsetDateTime",
-	        "onsetPeriod/end"
-    	]
-	},
-    "status": "One of [queued, running, finished, error]",
-    "finished": ["ID1"],
-    "queued_time": str(datetime.now()),
-    "start_time": str(datetime.now()),
-    "url": "URL to csv"
-}
-
-swagger_crawler_schema = {
-    "type": "object",
-    "properties": {
-        "_id": {
-            "type": "string"
-        },
-        "patient_ids": {
-            "type": "array",
-            "items": {
-                "type": "string"
-            }
-        },
-        "status": {
-            "type": "string"
-        },
-        "finished": {
-            "type": "array",
-            "items": {
-                "type": "string"
-            }
-        },
-        "queued_time": {
-            "type": "string"
-        },
-        "start_time": {
-            "type": "string"
-        },
-        "url": {
-            "type": "string"
-        }
-    },
-    "example": swagger_crawler_example
-}
 
 class Crawler(Resource):
     crawler_parser = parser.copy()
@@ -200,7 +62,7 @@ class Crawler(Resource):
     @swagger.doc({
         "description": "Start a Crawler Job for a single patient and wait until it's finished.",
         "tags": ["crawler"],
-        "parameters": swagger_params_patient,
+        "parameters": crawlerResourceSwagger.swagger_params_patient,
         "responses": {
             "200": {
                 "description": "Retrieved a json with a URL to the generated CSV and the exit status of the Crawler.",
@@ -246,7 +108,7 @@ class CrawlerJobs(Resource):
                 "description": "Retrieved Crawler Job(s) as json.",
                 "schema": {
                     "type": "array",
-                    "items": swagger_crawler_schema,
+                    "items": crawlerResourceSwagger.swagger_crawler_schema,
                 }
             }
         }
@@ -257,7 +119,7 @@ class CrawlerJobs(Resource):
     @swagger.doc({
         "description": "Submit a Crawler Job.",
         "tags": ["crawler"],
-        "parameters": swagger_params_patients,
+        "parameters": crawlerResourceSwagger.swagger_params_patients,
         "responses": {
             "200": {
                 "description": "Retrieved a json with the created Crawler ID.",
@@ -316,7 +178,7 @@ class CrawlerJob(Resource):
         "responses": {
             "200": {
                 "description": "Retrieved Crawler Job as json.",
-                "schema": swagger_crawler_schema
+                "schema": crawlerResourceSwagger.swagger_crawler_schema
             }
         } 
     })

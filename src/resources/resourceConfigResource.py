@@ -1,6 +1,7 @@
 from flask_restful import reqparse, abort
 from flask_restful_swagger_2 import Api, swagger, Resource
 from lib import mongodbConnection
+from swagger_resources import resourceConfigResourceSwagger
 import json
 import requests
 import configuration
@@ -35,41 +36,6 @@ parser.add_argument('resource_value_relative_path', type = str, required = True,
 parser.add_argument('sort_order', type = str, action = 'append', location = 'json')
 parser.add_argument('resource_name', type = str, required = True, help = NO_RESOURCE_NAME_STR, location = 'json')
 
-swagger_example = {
-    "resource_value_relative_path": "verificationStatus",
-    "sort_order": [
-        "onsetDateTime",
-        "onsetPeriod/end"
-    ],
-    "resource_name": "Condition"
-}
-
-swagger_params = [{
-    "name": "body",
-    "in": "body",
-    "required": True,
-    "schema": {
-        "type": "object",
-        "properties": {
-            "resource_value_relative_path": {
-                "type": "string",
-                "required": True
-            },
-            "sort_order": {
-                "type": "array",
-                "items": {
-                    "type": "string"
-                }
-            },
-            "resource_name": {
-                "type": "string",
-                "required": True
-            }
-        },
-        "example": swagger_example
-    },
-}]
-
 
 class ResourceConfig(Resource):
     def __init__(self):
@@ -83,7 +49,7 @@ class ResourceConfig(Resource):
                 "description": "Retrieved a json with a all configured Resources.",
                 "schema": {
                     "type": "array",
-                    "items": swagger_params[0]["schema"]
+                    "items": resourceConfigResourceSwagger.swagger_params[0]["schema"]
                 }
             }
         }
@@ -94,11 +60,11 @@ class ResourceConfig(Resource):
     @swagger.doc({
         "description": "Insert/Update a Resource Config.",
         "tags": ["resources"],
-        "parameters": swagger_params,
+        "parameters": resourceConfigResourceSwagger.swagger_params,
         "responses": {
             "200": {
                 "description": "Retrieved a json with the inserted/updated Resource.",
-                "schema": swagger_params[0]["schema"]
+                "schema": resourceConfigResourceSwagger.swagger_params[0]["schema"]
             }
         }
     })
@@ -113,11 +79,11 @@ class ResourceConfig(Resource):
     @swagger.doc({
         "description": "Remove a Resource Config.",
         "tags": ["resources"],
-        "parameters": swagger_params,
+        "parameters": resourceConfigResourceSwagger.swagger_params,
         "responses": {
             "200": {
                 "description": "Retrieved a json with the name of the removed Resource.",
-                "schema": swagger_params[0]["schema"]
+                "schema": resourceConfigResourceSwagger.swagger_params[0]["schema"]
             }
         }
     })
