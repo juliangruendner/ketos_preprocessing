@@ -13,6 +13,7 @@ import copy
 import urllib.parse
 import logging
 logger = logging.getLogger(__name__)
+import sys
 
 
 NO_PATIENTS_STR = "No patients provided"
@@ -54,7 +55,7 @@ parser.add_argument('resource_configs', type = resource_config_validator, action
 
 class Crawler(Resource):
     crawler_parser = parser.copy()
-    crawler_parser.add_argument('patient', type = str, required = True, help = NO_PATIENTS_STR, location = 'json')
+    crawler_parser.add_argument('patient', type = str, required = True, action='append', help = NO_PATIENTS_STR, location = 'json')
 
     def __init__(self):
         super(Crawler, self).__init__()
@@ -86,12 +87,13 @@ class Crawler(Resource):
     })
     def post(self):
         args = self.crawler_parser.parse_args()
+        crawler_id = str(ObjectId())
 
         logger.debug(args["resource_configs"])
-        crawlerJob = crawler.createCrawlerJob(str(ObjectId()), "running", args["patient"], args["feature_set"], args["aggregation_type"], args["resource_configs"])
+        crawlerJob = crawler.createCrawlerJob(crawler_id, "running", args["patient"], args["feature_set"], args["aggregation_type"], args["resource_configs"])
         crawlerStatus = crawler.executeCrawlerJob(crawlerJob)
+        return {"crawler_id": crawler_id, "csv_url": crawlerJob["url"], "crawler_status": crawlerStatus}
 
-        return {"csv_url": crawlerJob["url"], "crawler_status": crawlerStatus}
 
 class CrawlerJobs(Resource):
     crawler_jobs_parser = parser.copy()
@@ -184,3 +186,8 @@ class CrawlerJob(Resource):
     })
     def get(self, crawler_id):
         return mongodbConnection.get_db().crawlerJobs.find_one({"_id": crawler_id})
+    
+    def delete(self, crawler_id):
+        ret = mongodbConnection.get_db().crawlerJobs.delete_many({"_id": crawler_id})
+
+        return ret.deleted_count
