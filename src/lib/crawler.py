@@ -11,6 +11,8 @@ from datetime import datetime
 import traceback
 import logging
 logger = logging.getLogger(__name__)
+import sys
+import time
 
 
 settings = {
@@ -61,7 +63,8 @@ def executeCrawlerJob(crawlerJob):
         logger.info("Finished Crawler Job " + crawlerJob["_id"])
         return "success"
 
-    except Exception:
+    except Exception as e:
+        print("error", e, file=sys.stderr)
         logger.error("Execution of Crawler " + crawlerJob["_id"] + " failed", exc_info=1)
         mongodbConnection.get_db().crawlerJobs.update({"_id": crawlerJob["_id"]}, {"$set": {"status": "error", "end_time": str(datetime.now())}})
         return "error"
@@ -70,12 +73,19 @@ def crawlObservationForSubject(subject, collection, key, name):
     url_params = {"_pretty": "true", "subject": subject, "_format": "json", "_count": 100, key: name}
 
     next_page = configuration.HAPIFHIR_URL+"Observation"+'?'+urllib.parse.urlencode(url_params)
-    print(next_page)
 
     all_entries = []
     
     while next_page != None:
-        request = requests.get(next_page)
+
+        try:
+            request = requests.get(next_page)
+
+        except Exception as e:
+            # this avoids connection refused when to many varialbes arre requested
+            time.sleep(10)
+            continue
+
         json = request.json()
 
         if "entry" not in json:
@@ -96,7 +106,7 @@ def crawlObservationForSubject(subject, collection, key, name):
         reduced = reducer.getReduced()
         #patient = reducer.getEntity()
         observations.append(reduced)
-    
+
     mongodbConnection.get_db()[collection].find_one_and_update(
         { "_id": subject },
         {"$push": { "observations" : {"$each": observations}}},
