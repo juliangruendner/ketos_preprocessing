@@ -14,6 +14,7 @@ import urllib.parse
 import logging
 logger = logging.getLogger(__name__)
 import sys
+from lib.brainApiAccess import BrainApiAccess
 
 
 NO_PATIENTS_STR = "No patients provided"
@@ -85,6 +86,8 @@ class Crawler(Resource):
             }
         }
     })
+
+    @BrainApiAccess()
     def post(self):
         args = self.crawler_parser.parse_args()
         crawler_id = str(ObjectId())
@@ -115,7 +118,12 @@ class CrawlerJobs(Resource):
             }
         }
     })
+
+    @BrainApiAccess()
     def get(self):
+
+        print(request.environ['REMOTE_ADDR'], file=sys.stderr)
+
         return list(mongodbConnection.get_db().crawlerJobs.find())
 
     @swagger.doc({
@@ -139,6 +147,8 @@ class CrawlerJobs(Resource):
             }
         }
     })
+
+    @BrainApiAccess()
     def post(self):
         args = self.crawler_jobs_parser.parse_args()
 
@@ -162,6 +172,7 @@ class CrawlerJobs(Resource):
 
 class CrawlerJob(Resource):
 
+    @BrainApiAccess()
     def __init__(self):
         super(CrawlerJob, self).__init__()
     
@@ -184,7 +195,9 @@ class CrawlerJob(Resource):
             }
         } 
     })
+
     def get(self, crawler_id):
+
         return mongodbConnection.get_db().crawlerJobs.find_one({"_id": crawler_id})
     
     def delete(self, crawler_id):

@@ -10,6 +10,7 @@ from lib import aggregator, resourceLoader
 from flask import Response
 from bson.objectid import ObjectId
 import logging
+from lib.brainApiAccess import BrainApiAccess
 logger = logging.getLogger(__name__)
 
 
@@ -38,6 +39,8 @@ parser.add_argument('resource_name', type = str, required = True, help = NO_RESO
 
 
 class ResourceConfig(Resource):
+
+    @BrainApiAccess()
     def __init__(self):
         super(ResourceConfig, self).__init__()
     
