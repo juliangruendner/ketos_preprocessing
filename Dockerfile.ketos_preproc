@@ -1,0 +1,3 @@
+FROM python:3
+ADD src /ketos_preproc
+CMD bash -c "cd ketos_preproc && chmod +x startup.prod.sh && ./startup.prod.sh"

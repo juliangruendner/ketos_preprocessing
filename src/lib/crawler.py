@@ -54,7 +54,7 @@ def executeCrawlerJob(crawlerJob):
                 if feature["resource"] == "Observation":
                     crawlObservationForSubject(subject, crawlerJob["_id"], feature["key"], feature["value"])
                 else:
-                    crawlResourceForSubject(feature["resource"], subject, crawlerJob["_id"], feature["key"], feature["value"], feature["name"])
+                    crawlResourceForSubject(feature["resource"], subject, crawlerJob["_id"], feature["key"], feature["value"], feature["name"], feature["resource_val_path"])
              
             mongodbConnection.get_db().crawlerJobs.update({"_id": crawlerJob["_id"]}, {"$push": {"finished": subject}})
 
@@ -114,7 +114,7 @@ def crawlObservationForSubject(subject, collection, key, name):
         upsert=True
     )
 
-def crawlResourceForSubject(resourceName, subject, collection, key, value, name):
+def crawlResourceForSubject(resourceName, subject, collection, key, value, name, resource_val_path):
     # Dynamically load module for resource
     try:
         resource = getattr(importlib.import_module("fhirclient.models." + resourceName.lower()), resourceName)
@@ -124,7 +124,12 @@ def crawlResourceForSubject(resourceName, subject, collection, key, value, name)
 
     # Perform search
     try:
-        serverSearchParams = {"patient": subject, key: value}
+
+        if resourceName == 'Patient':
+            serverSearchParams = {"_id": subject}
+        else:
+            serverSearchParams = {"patient": subject, key: value}
+
         search = resource.where(serverSearchParams)
         ret = search.perform_resources(server.server)
     except Exception:
@@ -136,14 +141,15 @@ def crawlResourceForSubject(resourceName, subject, collection, key, value, name)
         return
 
     insert_list = []
+
     for element in ret:
         element = resource.as_json(element)
         element["_id"] = str(ObjectId())
-
         # Add this for later selection in aggregation
         element["feature"] = value 
         element["name"] = name if name is not None else value
         element["patient_id"] = subject
+        element["resource_val_path"] = resource_val_path
         
         insert_list.append(element)
 

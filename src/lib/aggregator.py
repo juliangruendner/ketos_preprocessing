@@ -4,7 +4,7 @@ from lib import mongodbConnection
 from functools import reduce
 import logging
 logger = logging.getLogger(__name__)
-
+import sys
 
 class Aggregator():
 
@@ -62,6 +62,7 @@ class Aggregator():
     def aggregateFeature(self, resource, selection):
         resource_config = self.getResourceConfig(resource)
                
+        
         mongorequest = [
             {"$match": {"feature": selection, "resourceType": resource}}
         ]
@@ -75,8 +76,9 @@ class Aggregator():
             raise ValueError("Feature " + selection + " of resource " + resource + " has no elements.")
 
         numAllElementsForFeature = allElementsForFeature[0]["count"]
-
-        if resource_config["sort_order"] is not None:
+        
+        
+        if resource_config["sort_order"] is not None and resource_config["sort_order"] != "None":
         # Before actually sorting check if every single element has the attribute that should be sorted after -> throw error if they do not
             for sortPath in resource_config["sort_order"]:
                 mongoSortPath = ".".join(sortPath.split("/")) # Change "/" to "."
@@ -103,12 +105,21 @@ class Aggregator():
             foundSearchPath = True
 
         if foundSearchPath:
+            tmp = "first" if self.aggregation_type == "oldest" else "last"
+            mongorequest += [
+                {"$group": {"_id": "$patient_id", "elements": {"$push": "$$CURRENT"}}},
+                {"$group": {"_id": "$_id", "elements": {"$first": "$elements"}}}
+                ]
+
             sortedFeature = list(mongodbConnection.get_db()[self.crawler_id].aggregate(mongorequest))
-                    
+  
             if self.aggregation_type == "" or self.aggregation_type == "all":
                 self.aggregatedElements.extend(sortedFeature)
             elif self.aggregation_type == "latest":
-                self.aggregatedElements.append(sortedFeature[-1])
+                for res in sortedFeature:
+                    res["resourceType"] = "Patient"
+                self.aggregatedElements.extend(sortedFeature)
+                #self.aggregatedElements.append(sortedFeature[-1])
             elif self.aggregation_type == "oldest":
                 self.aggregatedElements.append(sortedFeature[0])
         else:
@@ -116,6 +127,7 @@ class Aggregator():
 
     def restructureElements(self):
         for element in self.aggregatedElements:
+
             addDict = {}
             currentPatient = ""
 
@@ -130,7 +142,25 @@ class Aggregator():
                             addDict[tmp_col] = val
                     else:
                         addDict[col_name] = observation["value"]
+
+            elif element["resourceType"] == "Patient":
+                currentPatient = element["_id"]
+                resource_config = self.getResourceConfig(element["resourceType"])
+                cur = element
+                cur = cur['elements']
+
+                if 'resource_val_path' in cur[0]:
+                    resource_val_path = cur[0]['resource_val_path']
+                else:
+                    resource_val_path = resource_config["resource_value_relative_path"]
                 
+                for path in resource_val_path.split("/"):
+                    if isinstance(cur, dict):
+                        cur = cur[path]
+                    elif isinstance(cur, list):
+                        cur = cur[0][path]
+
+                addDict[element['elements'][0]["name"]] = cur
             else:
                 currentPatient = element["patient"]["reference"]
                 

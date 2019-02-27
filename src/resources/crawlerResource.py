@@ -23,7 +23,8 @@ FEATURE_SET_SCHEMA = {
     'resource': {'required': True, 'type': 'string'},   # Name of resource
     'key': {'required': True, 'type': 'string'},        # Key of resource to apply search query, e.g. "code"
     'value': {'required': True, 'type': 'string'},      # Value that key of resource must have to be retrieved, e.g. find code "21522001"
-    'name': {'type': 'string'}                          # Human readable name of the value and to be column name of table, e.g. "Abdominal Pain"
+    'name': {'type': 'string'},                        # Human readable name of the value and to be column name of table, e.g. "Abdominal Pain"
+    'resource_val_path': {'type': 'string'}
 }
 
 RESOURCE_CONFIG_SCHEMA = {

@@ -21,7 +21,7 @@ class BrainApiAccess(object):
 def is_brain_api():
     
     ip_list = []
-    ais = socket.getaddrinfo("ml_service", 0, 0, 0, 0)
+    ais = socket.getaddrinfo("ketos_brain", 0, 0, 0, 0)
     for result in ais:
         ip_list.append(result[-1][0])
     ip_list = list(set(ip_list))
