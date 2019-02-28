@@ -149,18 +149,20 @@ class Aggregator():
                 cur = element
                 cur = cur['elements']
 
-                if 'resource_val_path' in cur[0]:
-                    resource_val_path = cur[0]['resource_val_path']
-                else:
-                    resource_val_path = resource_config["resource_value_relative_path"]
-                
-                for path in resource_val_path.split("/"):
-                    if isinstance(cur, dict):
-                        cur = cur[path]
-                    elif isinstance(cur, list):
-                        cur = cur[0][path]
-
-                addDict[element['elements'][0]["name"]] = cur
+                for feature in cur:
+                    val = feature
+                    if 'resource_val_path' in feature:
+                        resource_val_path = feature['resource_val_path']
+                    else:
+                        resource_val_path = resource_config["resource_value_relative_path"]
+                    for path in resource_val_path.split("/"):
+                        print(path, file=sys.stderr)
+                        if isinstance(val, dict):
+                            val = val[path]
+                        elif isinstance(val, list):
+                            val = val[0][path]
+                    
+                    addDict[feature["name"]] = val
             else:
                 currentPatient = element["patient"]["reference"]
                 
