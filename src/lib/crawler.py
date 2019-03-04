@@ -54,7 +54,7 @@ def executeCrawlerJob(crawlerJob):
                 if feature["resource"] == "Observation":
                     crawlObservationForSubject(subject, crawlerJob["_id"], feature["key"], feature["value"])
                 else:
-                    crawlResourceForSubject(feature["resource"], subject, crawlerJob["_id"], feature["key"], feature["value"], feature["name"], feature["resource_val_path"])
+                    crawlResourceForSubject(feature["resource"], subject, crawlerJob["_id"], feature["key"], feature["value"], feature["name"], feature.get('resource_val_path'))
              
             mongodbConnection.get_db().crawlerJobs.update({"_id": crawlerJob["_id"]}, {"$push": {"finished": subject}})
 
@@ -64,7 +64,7 @@ def executeCrawlerJob(crawlerJob):
         return "success"
 
     except Exception as e:
-        print("error", e, file=sys.stderr)
+        print("error executing crawler", e, file=sys.stderr)
         logger.error("Execution of Crawler " + crawlerJob["_id"] + " failed", exc_info=1)
         mongodbConnection.get_db().crawlerJobs.update({"_id": crawlerJob["_id"]}, {"$set": {"status": "error", "end_time": str(datetime.now())}})
         return "error"
@@ -149,7 +149,8 @@ def crawlResourceForSubject(resourceName, subject, collection, key, value, name,
         element["feature"] = value 
         element["name"] = name if name is not None else value
         element["patient_id"] = subject
-        element["resource_val_path"] = resource_val_path
+        if resource_val_path is not None:
+            element["resource_val_path"] = resource_val_path
         
         insert_list.append(element)
 

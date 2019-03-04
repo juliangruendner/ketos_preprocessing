@@ -117,7 +117,7 @@ class Aggregator():
                 self.aggregatedElements.extend(sortedFeature)
             elif self.aggregation_type == "latest":
                 for res in sortedFeature:
-                    res["resourceType"] = "Patient"
+                    res["resourceType"] = resource
                 self.aggregatedElements.extend(sortedFeature)
                 #self.aggregatedElements.append(sortedFeature[-1])
             elif self.aggregation_type == "oldest":
@@ -143,7 +143,7 @@ class Aggregator():
                     else:
                         addDict[col_name] = observation["value"]
 
-            elif element["resourceType"] == "Patient":
+            else:
                 currentPatient = element["_id"]
                 resource_config = self.getResourceConfig(element["resourceType"])
                 cur = element
@@ -163,19 +163,6 @@ class Aggregator():
                             val = val[0][path]
                     
                     addDict[feature["name"]] = val
-            else:
-                currentPatient = element["patient"]["reference"]
-                
-                resource_config = self.getResourceConfig(element["resourceType"])
-                
-                cur = element
-                for path in resource_config["resource_value_relative_path"].split("/"):
-                    if isinstance(cur, dict):
-                        cur = cur[path]
-                    elif isinstance(cur, list):
-                        cur = cur[0][path]
-
-                addDict[element["name"]] = cur
 
             if "Patient/" in currentPatient:
                 currentPatient = currentPatient.replace("Patient/", "")
