@@ -1,5 +1,6 @@
 {
-    "resource_value_relative_path": "gender",
+    "resource_val_path": "gender",
     "sort_order": "None",
-    "resource_name": "Patient"
+    "resource_name": "Patient",
+    "key": "id"
 }

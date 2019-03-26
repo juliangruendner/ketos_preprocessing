@@ -1,8 +1,10 @@
 {
-    "resource_value_relative_path": "verificationStatus",
+    "resource_val_path": "verificationStatus",
     "sort_order": [
         "onsetDateTime",
         "onsetPeriod/end"
     ],
-    "resource_name": "Condition"
+    "resource_name": "Condition",
+    "key_path": "code.coding.code",
+    "key": "code"
 }

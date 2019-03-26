@@ -62,7 +62,6 @@ class Aggregator():
     def aggregateFeature(self, resource, selection):
         resource_config = self.getResourceConfig(resource)
                
-        
         mongorequest = [
             {"$match": {"feature": selection, "resourceType": resource}}
         ]
@@ -112,7 +111,7 @@ class Aggregator():
                 ]
 
             sortedFeature = list(mongodbConnection.get_db()[self.crawler_id].aggregate(mongorequest))
-  
+
             if self.aggregation_type == "" or self.aggregation_type == "all":
                 self.aggregatedElements.extend(sortedFeature)
             elif self.aggregation_type == "latest":
@@ -128,41 +127,34 @@ class Aggregator():
     def restructureElements(self):
         for element in self.aggregatedElements:
 
+            
             addDict = {}
             currentPatient = ""
 
-            if element["resourceType"] == "Observation":
-                currentPatient = element["_id"]
+            currentPatient = element["_id"]
+            resource_config = self.getResourceConfig(element["resourceType"])
+            cur = element
+            cur = cur['elements']
 
-                for observation in element["observations"]:
-                    col_name = observation["meta"]["attribute"]
-                    if isinstance(observation["value"], list):
-                        for idx, val in enumerate(observation["value"]):
-                            tmp_col = col_name+"."+str(idx)
-                            addDict[tmp_col] = val
-                    else:
-                        addDict[col_name] = observation["value"]
+            for feature in cur:
+                val = feature
 
-            else:
-                currentPatient = element["_id"]
-                resource_config = self.getResourceConfig(element["resourceType"])
-                cur = element
-                cur = cur['elements']
+                if 'resource_val_path' in feature and feature['resource_val_path'] is not None :
+                    resource_val_path = feature['resource_val_path']
+                else:
+                    resource_val_path = resource_config["resource_val_path"]
 
-                for feature in cur:
-                    val = feature
-                    if 'resource_val_path' in feature:
-                        resource_val_path = feature['resource_val_path']
-                    else:
-                        resource_val_path = resource_config["resource_value_relative_path"]
-                    for path in resource_val_path.split("/"):
-                        print(path, file=sys.stderr)
-                        if isinstance(val, dict):
-                            val = val[path]
-                        elif isinstance(val, list):
-                            val = val[0][path]
-                    
-                    addDict[feature["name"]] = val
+                # TODO: temporary fix to account for differen observations vals (quantity vs string)
+                if resource_val_path == "valueQuantity.value" and val.get("valueQuantity") == None:
+                    resource_val_path = "valueString"
+
+                for path in resource_val_path.split("."):
+                    if isinstance(val, dict):
+                        val = val[path]
+                    elif isinstance(val, list):
+                        val = val[0][path]
+                
+                addDict[feature["name"]] = val
 
             if "Patient/" in currentPatient:
                 currentPatient = currentPatient.replace("Patient/", "")
@@ -204,19 +196,13 @@ class Aggregator():
         return output.getvalue()
 
     def aggregate(self):
-        isObservationAdded = False
 
         for feature in self.feature_set:   
-            if feature["resource"] == "Observation":
-                if not isObservationAdded:
-                    self.aggregateObservations()
-                    isObservationAdded = True
-            else:
-                try:
-                    self.aggregateFeature(feature["resource"], feature["value"])
-                except ValueError:
-                    logger.warning("Elements of Feature " + feature["value"] + " from resource " + feature["resource"] + " could not be retrieved.")
-                    continue
+            try:
+                self.aggregateFeature(feature["resource"], feature["value"])
+            except ValueError:
+                logger.warning("Elements of Feature " + feature["value"] + " from resource " + feature["resource"] + " could not be retrieved.")
+                continue
 
         if self.aggregation_type == "latest" or self.aggregation_type == "oldest":
             self.restructureElements()

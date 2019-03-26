@@ -1,0 +1,7 @@
+{
+    "resource_val_path": "valueQuantity.value",
+    "sort_order": "None",
+    "resource_name": "Observation",
+    "key_path": "code.coding.code",
+    "key": "code"
+}

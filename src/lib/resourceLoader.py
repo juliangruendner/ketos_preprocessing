@@ -18,15 +18,17 @@ def loadResources():
                 config_file = open(path,'r')
                 file_content = json.loads(config_file.read())
 
-                if(file_content["resource_name"] is None or file_content["resource_value_relative_path"] is None):
-                    raise ValueError('Wrong format of file. Must contain fields "resource_name" and "resource_value_relative_path".')
+                if(file_content["resource_name"] is None or file_content["resource_val_path"] is None):
+                    raise ValueError('Wrong format of file. Must contain fields "resource_name" and "resource_val_path".')
 
                 mongodbConnection.get_db().resourceConfig.find_one_and_delete({"_id" : file_content["resource_name"]})
                 mongodbConnection.get_db().resourceConfig.insert_one({
                     "_id": file_content["resource_name"],
-                    "resource_value_relative_path": file_content["resource_value_relative_path"],
+                    "resource_val_path": file_content["resource_val_path"],
                     "sort_order": file_content["sort_order"],
                     "resource_name": file_content["resource_name"],
+                    "key_path": file_content.get("key_path"),
+                    "key": file_content.get("key"),
                 })
 
                 logger.info("Added resource " + file_content["resource_name"] + " of file " + path + " to db.")
