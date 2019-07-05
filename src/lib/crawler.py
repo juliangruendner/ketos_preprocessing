@@ -140,6 +140,7 @@ def create_resource_map(feature_set):
 
     return resource_map
 
+
 def crawlResourceGroupsForSubjects(resource_name, pat_ids, collection, values, code_inf_map, resource_configs):
 
     # Dynamically load module for resource
@@ -157,6 +158,21 @@ def crawlResourceGroupsForSubjects(resource_name, pat_ids, collection, values, c
             search_patient_resources(resource, pat_ids, values, resource_name, code_inf_map, resource_configs, key_path, collection)
             return
         else:
+            if configuration.GTFHIR is True:
+                
+                for pat_id in pat_ids.split(","):
+                    serverSearchParams = {"patient": pat_id, key: values}
+                    search = resource.where(serverSearchParams)
+                    ret = search.perform(server.server)
+                    
+                    if(ret.entry is None or len(ret.entry) == 0):
+                        logger.info("No values found for search for patients " + pat_id + " on resource " + resource_name)
+                        continue
+                    
+                    process_search_results(ret, resource_name, values, code_inf_map, resource_configs, key_path, collection)
+ 
+                return
+
             serverSearchParams = {"patient": pat_ids, key: values}
 
         search = resource.where(serverSearchParams)
@@ -165,7 +181,7 @@ def crawlResourceGroupsForSubjects(resource_name, pat_ids, collection, values, c
         logger.error("Search failed", exc_info=1)
         raise
 
-    if(len(ret.entry) == 0):
+    if(ret.entry is None or len(ret.entry) == 0):
         logger.info("No values found for search for patients " + pat_ids + " on resource " + resource_name)
         return
 

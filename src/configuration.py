@@ -8,3 +8,4 @@ HAPIFHIR_URL = os.environ.get("HAPIFHIR_URL", "http://ketos.ai:8080/gtfhir/base/
 DEBUG = os.environ.get("DEBUG", True)
 WSHOST = os.environ.get("WSHOST", "0.0.0.0")
 WSPORT = int(os.environ.get("WSPORT", 5000))
+GTFHIR = bool(os.environ.get("GTFHIR", False))
